@@ -1,0 +1,1060 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title data-translate-key="school_name">វិទ្យាល័យស្វាយរមៀត</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="shortcut icon" href="images/DUC-Logo.png" type="image/x-icon">
+    <meta name="theme-color" content="#7B61FF">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Student Information">
+    <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+    <link rel="icon" href="images/high_logo.png" type="image/png">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/shepherd.js@10.0.1/dist/css/shepherd.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Kantumruy+Pro:ital,wght@0,100..700;1,100..700&display=swap"
+        rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/shepherd.js@10.0.1/dist/js/shepherd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+    <script src="script.js" defer></script>
+    <meta name="google-site-verification" content="qDXx2uNjC0Hn2Y4hdtXFbU8HVFrertTraL2wR9y1hTo" />
+    <script>
+        if (localStorage.getItem('token')) {
+            const style = document.createElement('style');
+            style.textContent = `
+            #loginPage { display: none !important; }
+            #dashboard { display: flex !important; }
+        `;
+            document.head.appendChild(style);
+        }
+    </script>
+</head>
+
+<body>
+    <div id="loginPage" class="page-container">
+        <div class="login-wrapper">
+            <div class="login-header">
+                <h1 class="login-title" data-translate-key="login_title">Login</h1>
+                <p class="login-subtitle" data-translate-key="login_subtitle">Welcome back</p>
+            </div>
+            <img src="images/high_logo.png"
+                alt="logo of the school."
+                class="login-illustration" loading="lazy">
+            <form id="loginForm" class="login-form">
+                <h2 class="form-prompt" data-translate-key="login_form_prompt" id="login-form-label">Enter Your Information</h2>
+                <div style="margin-bottom: 1rem;">
+                    <input id="studentId" name="studentId" type="text" required class="form-input"
+                        placeholder="Enter Student ID" data-translate-key="placeholder_student_id"
+                        autocomplete="username" value="DIT2024" aria-labelledby="login-form-label"
+                        aria-describedby="loginError">
+                </div>
+                <div class="password-wrapper">
+                    <input id="password" name="password" type="password" autocomplete="current-password" required
+                        class="form-input" placeholder="Enter Password" data-translate-key="placeholder_password"
+                        aria-label="Password" aria-describedby="loginError">
+                    <i class='bx bx-hide password-toggle-icon' role="button"
+                        aria-label="Toggle password visibility"></i>
+                </div>
+                <p id="loginError" class="error-message hidden" style="margin-top: 1rem;" aria-live="polite">Invalid
+                    credentials. Please try
+                    again.</p>
+                <div style="margin-top: 1rem;">
+                    <button type="submit" id="loginButton" class="button button-primary">
+                        <span class="login-text" data-translate-key="login_button">Login</span>
+                        <span class="login-spinner hidden loader"></span>
+                    </button>
+
+                    <a href="admin.html" class="button-login-admin">
+                        <i class='bx bx-shield-quarter'></i>&nbsp; <span data-translate-key="admin_portal">Admin
+                            Portal</span>
+                    </a>
+                </div>
+                <div style="text-align: center; margin-top: 1.5rem;">
+                    <a href="#" id="forgotPasswordLink"
+                        style="color: var(--secondary-text); font-size: 0.875rem; font-weight: 500;">Forgot
+                        Password?</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="resetPage" class="page-container hidden"
+        style="display: flex; align-items: flex-start; justify-content: center; min-height: 100vh; padding: 2rem 1.5rem;">
+        <div class="login-wrapper">
+            <div class="login-header">
+                <h1 class="login-title" data-translate-key="reset_title">Reset Password</h1>
+                <p class="login-subtitle" data-translate-key="reset_subtitle">Regain access to your account</p>
+            </div>
+
+            <form id="requestResetForm" class="login-form">
+                <p class="form-prompt" style="font-size: 1rem; color: var(--primary-text);"
+                    data-translate-key="reset_prompt_request">Enter your Student ID below. If you have a registered
+                    email, we will send an OTP to reset your password.</p>
+                <div style="margin-bottom: 1rem;">
+                    <input id="resetStudentId" type="text" required class="form-input" placeholder="Enter Student ID"
+                        data-translate-key="placeholder_student_id" autocomplete="username">
+                </div>
+                <button type="submit" class="button button-primary">
+                    <span class="button-text" data-translate-key="reset_button_send">Send OTP</span>
+                    <span class="login-spinner hidden"></span>
+                </button>
+                <div style="text-align: center; margin-top: 1.5rem;">
+                    <a href="#" id="backToLoginLink"
+                        style="color: var(--secondary-text); font-size: 0.875rem; font-weight: 500;"
+                        data-translate-key="reset_back_to_login">Back to Login</a>
+                </div>
+            </form>
+
+            <form id="verifyOtpForm" class="login-form hidden">
+                <p class="form-prompt" style="font-size: 1rem; color: var(--primary-text);">Enter the 6-digit OTP sent
+                    to your email.</p>
+                <div class="form-field">
+                    <input type="number" id="otpInput" required class="form-input" placeholder="------"
+                        autocomplete="one-time-code"
+                        style="text-align: center; font-size: 1.5rem; letter-spacing: 0.5rem; font-weight: 600;">
+                </div>
+                <p id="otpError" class="error-message hidden" style="margin-top: 1rem;" aria-live="polite"></p>
+                <button type="submit" class="button button-primary">
+                    <span class="button-text">Verify OTP</span>
+                    <span class="login-spinner hidden"></span>
+                </button>
+            </form>
+
+            <form id="passwordResetForm" class="login-form hidden">
+                <p class="form-prompt" style="font-size: 1rem; color: var(--primary-text);"
+                    data-translate-key="reset_prompt_new">Create a new password. It must be at least 6 characters long.
+                </p>
+                <div class="form-field">
+                    <div class="password-wrapper">
+                        <input type="password" id="resetNewPassword" required class="form-input"
+                            autocomplete="new-password" placeholder="New Password"
+                            data-translate-key="reset_placeholder_new">
+                        <i class='bx bx-hide password-toggle-icon' role="button"
+                            aria-label="Toggle password visibility"></i>
+                    </div>
+                </div>
+                <div class="form-field">
+                    <div class="password-wrapper">
+                        <input type="password" id="resetConfirmPassword" required class="form-input"
+                            autocomplete="new-password" placeholder="Confirm New Password"
+                            data-translate-key="reset_placeholder_confirm">
+                        <i class='bx bx-hide password-toggle-icon' role="button"
+                            aria-label="Toggle password visibility"></i>
+                    </div>
+                </div>
+                <button type="submit" class="button button-primary">
+                    <span class="button-text" data-translate-key="reset_button_update">Update Password</span>
+                    <span class="login-spinner hidden"></span>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div id="dashboard" class="hidden">
+        <main class="main-content">
+            <div id="home" class="content-section" role="region" aria-labelledby="home-title">
+                <div id="home-main-view">
+                    <header class="page-header">
+                        <h1 class="page-title" data-translate-key="home_title" id="home-title">Home</h1>
+                        <button id="notificationsBtn" class="icon-button" aria-label="View notifications"
+                            style="position: relative;">
+                            <i class='bx bx-bell' aria-hidden="true"></i>
+                            <span id="notification-badge" class="hidden"></span>
+                        </button>
+                    </header>
+
+                    <div class="section-header" style="margin-top: 1rem;">
+                        <h2 data-translate-key="home_todays_classes">My Classes</h2>
+                        <a href="#schedule" class="view-all-link nav-link-internal"><span
+                                data-translate-key="home_open_schedule">Open schedule</span> <i
+                                class='bx bx-chevron-right' aria-hidden="true"></i></a>
+                    </div>
+                    
+                    <div id="today-classes-container" class="horizontal-carousel">
+                        <div class="skeleton skeleton-class-card"></div>
+                        <div class="skeleton skeleton-class-card"></div>
+                        <div class="skeleton skeleton-class-card"></div>
+                    </div>
+
+                    <div class="tabs" role="tablist" aria-label="Information tabs">
+                        <button class="tab-link active" data-tab="news" data-translate-key="home_tab_news" role="tab"
+                            aria-selected="true" id="tab-news">News</button>
+                        <button class="tab-link" data-tab="events" data-translate-key="home_tab_events" role="tab"
+                            aria-selected="false" id="tab-events">Events</button>
+                    </div>
+                    <div id="news-container" class="tab-content active" role="tabpanel" aria-labelledby="tab-news">
+                        <div class="skeleton-news-item">
+                            <div class="skeleton skeleton-news-date"></div>
+                            <div class="skeleton-news-content">
+                                <div class="skeleton skeleton-text title"></div>
+                                <div class="skeleton skeleton-text desc"></div>
+                                <div class="skeleton skeleton-text desc-short"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="events-container" class="tab-content" role="tabpanel" aria-labelledby="tab-events">
+                        <div class="skeleton-news-item">
+                            <div class="skeleton skeleton-news-date"></div>
+                            <div class="skeleton-news-content">
+                                <div class="skeleton skeleton-text title"></div>
+                                <div class="skeleton skeleton-text desc"></div>
+                                <div class="skeleton skeleton-text desc-short"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+                <div id="notifications-view" class="sub-page hidden">
+                    <header class="page-header">
+                        <button class="back-button icon-button" aria-label="Go back to home"><i
+                                class='bx bx-chevron-left' aria-hidden="true"></i></button>
+                        <h1 class="page-title">Notifications</h1>
+                        <div style="width: 24px;"></div>
+                    </header>
+                    <div id="notifications-list-container" class="list-container" style="gap: 1rem;">
+                        <div class="skeleton skeleton-card"></div>
+                        <div class="skeleton skeleton-card"></div>
+                        <div class="skeleton skeleton-card"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="schedule" class="content-section" role="region" aria-labelledby="schedule-title">
+                <header class="page-header">
+                    <h1 class="page-title" data-translate-key="schedule_title" id="schedule-title">Schedule</h1>
+                </header>
+
+                <div class="tabs">
+                    <button class="tab-link schedule-toggle active" data-view="class"
+                        data-translate-key="schedule_class_title">
+                        Class Schedule
+                    </button>
+                    <button class="tab-link schedule-toggle" data-view="exam" data-translate-key="schedule_exam_title">
+                        Exam Schedule
+                    </button>
+                </div>
+
+                <div id="class-schedule-view" class="schedule-view active">
+                    <div id="schedule-header" class="card" style="padding-block: 0.75rem;"></div>
+                    <div id="schedule-day-selector" class="card"></div>
+                    <div id="schedule-timeline-container"></div>
+                </div>
+
+                <div id="exam-schedule-view" class="schedule-view">
+                    <div id="exam-list-container" class="list-container">
+                        <div class="skeleton skeleton-card"></div>
+                        <div class="skeleton skeleton-card"></div>
+                        <div class="skeleton skeleton-card"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="result" class="content-section" role="region" aria-labelledby="result-title">
+                <div id="result-main-view">
+                    <header class="page-header">
+                        <h1 class="page-title" data-translate-key="result_title" id="result-title">Final Grades</h1>
+                    </header>
+
+                    <div class="academic-hero-card">
+                        <div class="academic-hero-bg"></div>
+                        <div class="academic-hero-content">
+                            <div class="gpa-circle-container">
+                                <svg viewBox="0 0 36 36" class="circular-chart">
+                                    <path class="circle-bg"
+                                        d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                                    <path class="circle" stroke-dasharray="100, 100"
+                                        d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                                </svg>
+                                <div class="gpa-text">
+                                    <span id="cgpa-value">--</span>
+                                    <small data-translate-key="result_gpa_label">GPA</small>
+                                </div>
+                            </div>
+
+                            <div class="academic-stats-row">
+                                <div class="stat-box">
+                                    <span class="stat-label" data-translate-key="result_academic_year">Year</span>
+                                    <span class="stat-num">2025-2026</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="results-filter-bar">
+                        <div id="gradeFilterResult" class="custom-select minimal-select" style="flex: 1;">
+                            <div class="select-trigger" role="button">
+                                <span>Grade --</span>
+                                <i class='bx bx-chevron-down'></i>
+                            </div>
+                            <div class="select-options"></div>
+                        </div>
+
+                        <div id="semesterFilterResult" class="custom-select minimal-select" style="flex: 1.5;">
+                            <div class="select-trigger" role="button">
+                                <span>Semester 1</span>
+                                <i class='bx bx-chevron-down'></i>
+                            </div>
+                            <div class="select-options"></div>
+                        </div>
+                    </div>
+
+                    <div id="scoresTableBody" class="grade-list-container">
+                        <div class="skeleton-grade-item">
+                            <div class="skeleton skeleton-grade-icon"></div>
+                            <div class="skeleton-grade-info">
+                                <div class="skeleton skeleton-text title"></div>
+                                <div class="skeleton skeleton-text desc"></div>
+                            </div>
+                            <div class="skeleton skeleton-grade-score"></div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div id="result-detail-view" class="sub-page hidden">
+                    <header class="page-header">
+                        <button class="back-button icon-button" aria-label="Go back to results list"><i
+                                class='bx bx-chevron-left' aria-hidden="true"></i></button>
+                        <h1 id="result-detail-title" class="page-title" style="font-size: 1.2rem;">Course Title</h1>
+                        <div style="width: 24px;"></div>
+                    </header>
+                    <div class="card">
+                        <h3 class="card-title" data-translate-key="detail_score_header">Score Details</h3>
+                        <div id="result-score-details" class="details-list">
+                        </div>
+                    </div>
+                    <div class="card">
+                        <h3 class="card-title" data-translate-key="detail_attendance_header">Attendance Summary</h3>
+                        <div id="result-attendance-summary" class="details-list">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="attendance" class="content-section" role="region" aria-labelledby="attendance-title">
+                <div id="attendance-main-view">
+                    <header class="page-header">
+                        <h1 class="page-title" data-translate-key="attendance_title" id="attendance-title">Attendance
+                        </h1>
+                        <button id="viewPermissionHistoryBtn" class="icon-button" aria-label="View permission history">
+                            <i class='bx bx-history'></i>
+                        </button>
+                    </header>
+
+                    <div class="filter-container" style="display: flex; gap: 1rem; padding: 0 0 1rem;">
+
+                        <div id="gradeFilterAttendance" class="custom-select" style="flex: 1;">
+                            <div class="select-trigger" role="button">
+                                <span>Grade --</span>
+                                <i class='bx bx-chevron-down'></i>
+                            </div>
+                            <div class="select-options"></div>
+                        </div>
+
+                        <div id="semesterFilterAttendance" class="custom-select" style="flex: 1;">
+                            <div class="select-trigger" role="button">
+                                <span>Semester 1</span>
+                                <i class='bx bx-chevron-down'></i>
+                            </div>
+                            <div class="select-options"></div>
+                        </div>
+                    </div>
+
+                    <div class="card attendance-overall-summary">
+                        <div class="summary-chart">
+                            <div class="summary-chart-percent" id="overall-attendance-percent">--%</div>
+                        </div>
+                        <div class="summary-details">
+                            <h3 data-translate-key="attendance_overall_summary_title">Overall Summary</h3>
+                            <div class="summary-stats">
+                                <div><span class="dot present"></span><span
+                                        data-translate-key="attendance_present_label">Present</span>: <b
+                                        id="total-present">0</b></div>
+                                <div><span class="dot absent"></span><span
+                                        data-translate-key="attendance_absent_label">Absent</span>: <b
+                                        id="total-absent">0</b></div>
+                                <div><span class="dot permission"></span><span
+                                        data-translate-key="attendance_permission_label">Permission</span>: <b
+                                        id="total-permission">0</b></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button id="requestPermissionBtn" class="button button-primary"
+                        style="display: flex; align-items: center; justify-content: center; gap: 0.5rem; margin-top: 1rem;">
+                        <i class='bx bx-plus-circle'></i>
+                        <span data-translate-key="attendance_request_permission_btn">Request Permission</span>
+                    </button>
+
+                    <div id="attendanceListContainer" class="list-container" style="margin-top: 1rem;">
+                        <div class="skeleton skeleton-card"></div>
+                    </div>
+                </div>
+
+                <div id="permission-request-view" class="sub-page hidden">
+                    <header class="page-header">
+                        <button class="back-button icon-button" aria-label="Go back to attendance list"><i
+                                class='bx bx-chevron-left' aria-hidden="true"></i></button>
+                        <h1 class="page-title" data-translate-key="permission_title">Request Permission</h1>
+                        <div style="width: 24px;"></div>
+                    </header>
+
+                    <div id="permission-form-container">
+                        <div id="permission-form-skeleton" class="card hidden">
+                            <div class="skeleton" style="height: 60px; margin-bottom: 1rem;"></div>
+                            <div class="skeleton" style="height: 60px; margin-bottom: 1rem;"></div>
+                            <div
+                                style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
+                                <div class="skeleton" style="height: 50px;"></div>
+                                <div class="skeleton" style="height: 50px;"></div>
+                            </div>
+                            <div class="skeleton" style="height: 100px; margin-bottom: 1.5rem;"></div>
+                            <div class="skeleton" style="height: 48px; border-radius: 50px;"></div>
+                        </div>
+
+                        <form id="permissionRequestForm" class="card" novalidate>
+                            <div class="form-grid">
+                                <!-- Automatically "Class Skip", so we only need Leave Period -->
+                                <div id="leave-duration-group" class="form-field grid-span-2">
+                                    <label>
+                                        <span data-translate-key="perm_group_leave_period">Leave Period</span>
+                                    </label>
+                                    <div class="status-options">
+                                        <input type="radio" name="Day" value="AM" id="ld1" required><label
+                                            for="ld1"><span data-translate-key="perm_duration_morning">1
+                                                Morning</span></label>
+                                        <input type="radio" name="Day" value="PM" id="ld2"><label for="ld2"><span
+                                                data-translate-key="perm_duration_afternoon">1 Afternoon</span></label>
+                                        <input type="radio" name="Day" value="1" id="ld4"><label for="ld4"><span
+                                                data-translate-key="perm_duration_1_day">1 Day</span></label>
+                                    </div>
+                                </div>
+
+                                <div id="date-group" class="form-field grid-span-2">
+                                    <label for="permissionDate">
+                                        <span data-translate-key="perm_label_start_date">Date Stop</span>
+                                    </label>
+                                    <input type="date" id="permissionDate" name="requestDate" required
+                                        class="form-input">
+                                </div>
+                            </div>
+
+                            <hr class="form-divider">
+
+                            <div class="form-field grid-span-2">
+                                <label for="permissionReason" data-translate-key="permission_reason">Reason for
+                                    Absence</label>
+                                <textarea id="permissionReason" name="reason" rows="4" required class="form-input"
+                                    data-translate-key="perm_placeholder_reason"
+                                    placeholder="Please provide a detailed reason..."></textarea>
+                            </div>
+
+                            <button type="submit" class="button button-primary grid-span-2">
+                                <span class="button-text" data-translate-key="permission_submit_btn">Submit
+                                    Request</span>
+                                <span class="login-spinner hidden"></span>
+                            </button>
+                        </form>
+
+
+                        <div id="permission-overlay" class="permission-overlay hidden">
+                            <div class="overlay-content">
+                                <img id="overlay-profile-img" class="overlay-profile-img"
+                                    src="https://placehold.co/128x128/eeeeee/333333?text=?"
+                                    alt="Student's profile picture">
+
+                                <div class="overlay-details-container">
+                                    <div class="details-list" id="overlay-details-list">
+                                    </div>
+                                </div>
+
+                                <button id="withdrawRequestBtn" class="button button-primary"
+                                    style="margin-top: 1rem; background-color: var(--status-denied-text); box-shadow: none;">
+                                    <span data-translate-key="perm_btn_withdraw">Withdraw Request</span>
+                                </button>
+                                <button id="requestNewPermissionBtn" class="button button-primary"
+                                    style="margin-top: 1rem; box-shadow: none; display: none;">
+                                    <span data-translate-key="perm_btn_request_again">Request Again</span>
+                                </button>
+                                <button id="checkInBtn" class="button button-primary"
+                                    style="margin-top: 1rem; background-color: var(--status-approved-text); box-shadow: none; display: none;">
+                                    <span class="button-text" data-translate-key="perm_btn_checkin">Check-in Now</span>
+                                    <span class="login-spinner hidden"></span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="permission-history-view" class="sub-page hidden">
+                    <header class="page-header">
+                        <button class="back-button icon-button" aria-label="Go back to attendance list"><i
+                                class='bx bx-chevron-left' aria-hidden="true"></i></button>
+                        <h1 class="page-title">Permission History</h1>
+                        <div style="width: 24px;"></div>
+                    </header>
+                    <div id="permission-history-list" class="list-container" style="gap: 1rem;">
+                        <div class="skeleton skeleton-card"></div>
+                        <div class="skeleton skeleton-card"></div>
+                        <div class="skeleton skeleton-card"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="profile" class="content-section" role="region" aria-labelledby="profile-title-main">
+                <div id="profile-main-view">
+                    <div class="profile-card" style="margin-top: 1.5rem;">
+                        <div id="profile-skeleton" class="profile-skeleton-loader">
+                            <div class="skeleton"
+                                style="width: 100px; height: 100px; border-radius: 50%; margin: 0 auto .5rem;"></div>
+                            <div class="skeleton"
+                                style="height: 28px; width: 60%; margin: 0 auto .5rem; border-radius: 8px;"></div>
+                            <div class="skeleton" style="height: 20px; width: 40%; margin: 0 auto; border-radius: 8px;">
+                            </div>
+                        </div>
+                    </div>
+                    <script>
+                        try {
+                            const cachedProfileJSON = localStorage.getItem('studentProfile');
+                            if (cachedProfileJSON) {
+                                const profile = JSON.parse(cachedProfileJSON);
+
+                                const profileCard = document.querySelector('#profile-main-view .profile-card');
+                                const skeleton = document.getElementById('profile-skeleton');
+
+                                const profileContentHTML = `
+                        <div class="profile-card-content loaded">
+                            <img id="profile-img-view" class="profile-img-lg"
+                                src="${profile.profileImgUrl || `https://placehold.co/128x128/eeeeee/333333?text=${profile.englishName?.[0] || '?'}`}"
+                                alt="Student profile picture">
+                            <h2 id="profile-englishName-view" class="profile-name">${profile.englishName || 'N/A'}</h2>
+                            <p id="profile-id-view" class="profile-id">${profile.studentId || 'N/A'}</p>
+                        </div>
+                    `;
+                                if (profileCard && skeleton) {
+                                    skeleton.remove();
+                                    profileCard.insertAdjacentHTML('beforeend', profileContentHTML);
+                                }
+                            }
+                        } catch (e) {
+                            console.error('Error hydrating profile from cache:', e);
+                        }
+                    </script>
+                    <div class="profile-stats-grid">
+                        <div class="stat-item">
+                            <span class="stat-value" id="profile-gpa">--</span>
+                            <span class="stat-label" data-translate-key="result_cgpa">GPA</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-value" id="profile-grade-stat">--</span>
+                            <span class="stat-label">Grade</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-value" id="profile-year">--</span>
+                            <span class="stat-label" data-translate-key="profile_year">Year</span>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="settings-list">
+                            <a href="#" id="myProfileBtn" class="settings-item">
+                                <span class="setting-icon my-profile bx bx-user" aria-hidden="true"></span>
+                                <span data-translate-key="profile_my_profile">My Profile</span>
+                                <span class="chevron"><i class='bx bx-chevron-right' aria-hidden="true"></i></span>
+                            </a>
+                            <a href="#" id="digitalIdBtn" class="settings-item">
+                                <span class="setting-icon my-profile bx bx-id-card" aria-hidden="true"></span>
+                                <span data-translate-key="digital_id_title">Digital ID Card</span>
+                                <span class="chevron"><i class='bx bx-chevron-right' aria-hidden="true"></i></span>
+                            </a>
+                            <a href="#" id="changePasswordBtn" class="settings-item">
+                                <span class="setting-icon password bx bx-lock-alt" aria-hidden="true"></span>
+                                <span data-translate-key="profile_change_password">Change Password</span>
+                                <span class="chevron"><i class='bx bx-chevron-right' aria-hidden="true"></i></span>
+                            </a>
+                            <a href="#" id="securityBtn" class="settings-item">
+                                <span class="setting-icon security bx bx-shield-quarter" aria-hidden="true"></span>
+                                <span data-translate-key="profile_login_security">Login & Security</span>
+                                <span class="chevron"><i class='bx bx-chevron-right' aria-hidden="true"></i></span>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="settings-list">
+                            <a href="#" id="appearanceBtn" class="settings-item">
+                                <span class="setting-icon appearance bx bx-palette" aria-hidden="true"></span>
+                                <span data-translate-key="appearance_title">Appearance</span>
+                                <span class="chevron"><i class='bx bx-chevron-right' aria-hidden="true"></i></span>
+                            </a>
+                            <a href="#" id="languageBtn" class="settings-item">
+                                <span class="setting-icon language bx bx-globe" aria-hidden="true"></span>
+                                <span data-translate-key="profile_language">Language</span>
+                                <span id="current-language-display" class="current-language"></span>
+                                <span class="chevron"><i class='bx bx-chevron-right' aria-hidden="true"></i></span>
+                            </a>
+                            <a href="#" id="installAppBtn" class="settings-item" style="display: none;">
+                                <span class="setting-icon appearance bx bx-download" aria-hidden="true"></span>
+                                <span>Install App</span>
+                                <span class="chevron"><i class='bx bx-chevron-right' aria-hidden="true"></i></span>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="settings-list">
+                            <a href="#" id="feedbackBtn" class="settings-item">
+                                <span class="setting-icon help bx bx-help-circle" aria-hidden="true"></span>
+                                <span data-translate-key="feedback_title">Help & Feedback</span>
+                                <span class="chevron"><i class='bx bx-chevron-right' aria-hidden="true"></i></span>
+                            </a>
+                            <a href="#" id="logoutButton" class="settings-item">
+                                <span class="setting-icon logout bx bx-log-out" aria-hidden="true"></span>
+                                <span data-translate-key="profile_logout">Logout</span>
+                                <span class="chevron"><i class='bx bx-chevron-right' aria-hidden="true"></i></span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="my-profile-view" class="sub-page hidden">
+                    <header class="page-header">
+                        <button class="back-button icon-button" aria-label="Go back to profile"><i
+                                class='bx bx-chevron-left' aria-hidden="true"></i></button>
+                        <h1 class="page-title" data-translate-key="my_profile_title">My Profile</h1>
+                        <div style="width: 24px;"></div>
+                    </header>
+                    <div class="profile-card">
+                        <div class="profile-image-changer">
+                            <img id="my-profile-img" class="profile-img-lg"
+                                src="https://placehold.co/128x128/eeeeee/333333?text=?" alt="Student profile picture">
+                            <label for="profile-image-upload" class="camera-icon" aria-label="Change profile picture">
+                                <i class='bx bxs-camera' aria-hidden="true"></i>
+                            </label>
+                            <input type="file" id="profile-image-upload" accept="image/*" class="hidden">
+                            <svg class="upload-spinner" viewBox="0 0 50 50">
+                                <circle class="path" cx="25" cy="25" r="20" fill="none" stroke-width="5"></circle>
+                            </svg>
+                        </div>
+                        <h2 id="my-profile-name"></h2>
+                        <p id="my-profile-id"></p>
+                    </div>
+                    <div class="card">
+                        <h3 class="card-title" data-translate-key="my_profile_personal_info">Personal Information</h3>
+                        <div class="details-list">
+                            <div class="detail-item"><span class="detail-label"
+                                    data-translate-key="my_profile_khmer_name">Khmer Name</span><span
+                                    id="profile-khmerName" class="detail-value"></span></div>
+                            <div class="detail-item"><span class="detail-label"
+                                    data-translate-key="my_profile_phone">Phone</span><span id="profile-phone"
+                                    class="detail-value"></span></div>
+                            <a href="#" id="emailSettingsBtn" class="settings-item detail-item-link">
+                                <span class="detail-label" data-translate-key="my_profile_email">Email</span>
+                                <span id="profile-email" class="detail-value"></span>
+                                <span class="chevron"><i class='bx bx-chevron-right' aria-hidden="true"></i></span>
+                            </a>
+                            <div class="detail-item"><span class="detail-label"
+                                    data-translate-key="my_profile_sex">Sex</span><span id="profile-sex"
+                                    class="detail-value"></span></div>
+                            <div class="detail-item"><span class="detail-label" data-translate-key="my_profile_dob">Date
+                                    of Birth</span><span id="profile-dob" class="detail-value"></span></div>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <h3 class="card-title" data-translate-key="my_profile_academic_info">Academic Information</h3>
+                        <div class="details-list">
+                            <div class="detail-item">
+                                <span class="detail-label" data-translate-key="my_profile_class">Class</span>
+                                <span id="profile-display-class" class="detail-value"></span>
+                            </div>
+
+                            <div class="detail-item">
+                                <span class="detail-label" data-translate-key="my_profile_major">Major</span>
+                                <span id="profile-display-major" class="detail-value"></span>
+                            </div>
+
+                            <div class="detail-item">
+                                <span class="detail-label" data-translate-key="my_profile_generation">Generation</span>
+                                <span id="profile-display-generation" class="detail-value"></span>
+                            </div>
+
+                            <div class="detail-item">
+                                <span class="detail-label">Year student</span>
+                                <span id="profile-display-year" class="detail-value"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="digital-id-view" class="sub-page hidden">
+                    <header class="page-header">
+                        <button class="back-button icon-button" aria-label="Go back to profile"><i
+                                class='bx bx-chevron-left' aria-hidden="true"></i></button>
+                        <h1 class="page-title" data-translate-key="digital_id_title">Digital ID Card</h1>
+                        <div style="width: 24px;"></div>
+                    </header>
+
+                    <div class="id-card-wrapper">
+                        <div class="professional-id-card">
+                            <div class="card-side-accent"></div>
+                            <div class="card-main-content">
+                                <div class="card-top">
+                                    <div class="school-info">
+                                        <h2 data-translate-key="school_name">Svay Rieng High School</h2>
+                                        <span class="id-badge">OFFICIAL STUDENT ID</span>
+                                    </div>
+                                    <div id="id-card-qrcode"></div>
+                                </div>
+
+                                <div class="card-middle">
+                                    <div class="photo-container">
+                                        <img id="id-card-photo" src="" alt="Student Photo">
+                                    </div>
+                                    <div class="primary-info">
+                                        <h3 id="id-card-khmer-name">--</h3>
+                                        <h4 id="id-card-name">--</h4>
+                                        <div class="id-number-tag">
+                                            <small>ID NUMBER</small>
+                                            <span id="id-card-main-id">--</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="card-bottom">
+                                    <div class="info-grid">
+                                        <div class="info-item">
+                                            <label data-translate-key="my_profile_class">Class</label>
+                                            <span id="id-card-class">--</span>
+                                        </div>
+                                        <div class="info-item">
+                                            <label data-translate-key="my_profile_major">Major</label>
+                                            <span id="id-card-major">--</span>
+                                        </div>
+                                        <div class="info-item">
+                                            <label data-translate-key="my_profile_generation">Gen</label>
+                                            <span id="id-card-generation">--</span>
+                                        </div>
+                                        <div class="info-item">
+                                            <label data-translate-key="profile_year">Year</label>
+                                            <span id="id-card-year">--</span>
+                                        </div>
+                                    </div>
+                                    <div class="live-status-bar">
+                                        <span class="status-dot"></span>
+                                        <span id="live-clock">00:00:00</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="security-view" class="sub-page hidden">
+                    <header class="page-header">
+                        <button class="back-button icon-button" aria-label="Go back to profile"><i
+                                class='bx bx-chevron-left' aria-hidden="true"></i></button>
+                        <h1 class="page-title" data-translate-key="profile_login_security">Login & Security</h1>
+                        <div style="width: 24px;"></div>
+                    </header>
+                    <div class="card">
+                        <p style="font-size: 0.875rem; color: var(--secondary-text); line-height: 1.5; margin-bottom: 1.5rem;"
+                            data-translate-key="profile_login_security_info">
+                            This is a list of recent logins to your account. If you see any activity you don't
+                            recognize, please change your password immediately.
+                        </p>
+                        <button id="securityChangePasswordBtn" class="button button-primary"
+                            style="background-color: var(--status-denied-text); box-shadow: none;">
+                            Change Your Password
+                        </button>
+                    </div>
+                    <div class="card">
+                        <h3 class="card-title">Recent Login Activity</h3>
+                        <div id="login-history-list" class="details-list" style="gap: 0.5rem;">
+                            <div class="skeleton" style="height: 40px; width: 100%; border-radius: 8px;"></div>
+                            <div class="skeleton" style="height: 40px; width: 100%; border-radius: 8px;"></div>
+                            <div class="skeleton" style="height: 40px; width: 100%; border-radius: 8px;"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="edit-email-view" class="sub-page hidden">
+                    <header class="page-header">
+                        <button class="back-button icon-button" aria-label="Go back to profile"><i
+                                class='bx bx-chevron-left' aria-hidden="true"></i></button>
+                        <h1 class="page-title" data-translate-key="email_edit_title">Email</h1>
+                        <button id="saveEmailBtn" class="button-text-header">
+                            <span class="button-text" data-translate-key="email_edit_save">Save</span>
+                            <span class="header-spinner hidden"></span>
+                        </button>
+                    </header>
+                    <form id="emailChangeForm" class="card" style="padding: 1.5rem;">
+                        <div class="form-field">
+                            <label for="emailInput" data-translate-key="email_edit_label">EMAIL</label>
+                            <input type="email" id="emailInput" required class="form-input" autocomplete="email"
+                                placeholder="example@email.com">
+                        </div>
+                        <p class="form-helper-text" data-translate-key="email_edit_helper">
+                            You can add an email to get a notifications. Make sure it's an email you can access.
+                        </p>
+                    </form>
+                </div>
+
+                <div id="change-password-view" class="sub-page hidden">
+                    <header class="page-header">
+                        <button class="back-button icon-button" aria-label="Go back to profile"><i
+                                class='bx bx-chevron-left' aria-hidden="true"></i></button>
+                        <h1 class="page-title" data-translate-key="password_title">Change Password</h1>
+                        <div style="width: 24px;"></div>
+                    </header>
+                    <form id="passwordChangeForm" class="card">
+                        <div class="form-field">
+                            <label for="currentPassword" data-translate-key="password_current">Current Password</label>
+                            <div class="password-wrapper">
+                                <input type="password" id="currentPassword" required class="form-input"
+                                    autocomplete="current-password">
+                                <i class='bx bx-hide password-toggle-icon' role="button"
+                                    aria-label="Toggle password visibility"></i>
+                            </div>
+                        </div>
+                        <div class="form-field">
+                            <label for="newPassword" data-translate-key="password_new">New Password</label>
+                            <div class="password-wrapper">
+                                <input type="password" id="newPassword" required class="form-input"
+                                    autocomplete="new-password">
+                                <i class='bx bx-hide password-toggle-icon' role="button"
+                                    aria-label="Toggle password visibility"></i>
+                            </div>
+                        </div>
+                        <div class="form-field">
+                            <label for="confirmPassword" data-translate-key="password_confirm">Confirm New
+                                Password</label>
+                            <div class="password-wrapper">
+                                <input type="password" id="confirmPassword" required class="form-input"
+                                    autocomplete="new-password">
+                                <i class='bx bx-hide password-toggle-icon' role="button"
+                                    aria-label="Toggle password visibility"></i>
+                            </div>
+                        </div>
+                        <button type="submit" class="button button-primary">
+                            <span class="button-text" data-translate-key="password_update_btn">Update Password</span>
+                            <span class="login-spinner hidden"></span>
+                        </button>
+                    </form>
+                </div>
+
+                <div id="language-view" class="sub-page hidden">
+                    <header class="page-header">
+                        <button class="back-button icon-button" aria-label="Go back to profile"><i
+                                class='bx bx-chevron-left' aria-hidden="true"></i></button>
+                        <h1 class="page-title" data-translate-key="language_title">Language</h1>
+                        <div style="width: 24px;"></div>
+                    </header>
+                    <div class="card">
+                        <div class="settings-list">
+                            <a href="#" class="settings-item language-option" data-lang="en">
+                                English
+                                <span class="chevron"><i class='bx bx-check' aria-hidden="true"></i></span>
+                            </a>
+                            <a href="#" class="settings-item language-option" data-lang="km">
+                                ខ្មែរ (Khmer)
+                                <span class="chevron"><i class='bx bx-check' aria-hidden="true"></i></span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="appearance-view" class="sub-page hidden">
+                    <header class="page-header">
+                        <button class="back-button icon-button" aria-label="Go back to profile"><i
+                                class='bx bx-chevron-left' aria-hidden="true"></i></button>
+                        <h1 class="page-title" data-translate-key="appearance_title">Appearance</h1>
+                        <div style="width: 24px;"></div>
+                    </header>
+
+                    <div class="card">
+                        <h3 class="card-title">Theme Color</h3>
+                        <div id="color-options-container" class="color-grid">
+                            <div class="color-option active" role="button" data-hue="250" aria-label="Purple theme">
+                                <div class="color-dot" style="background: hsl(250, 72%, 61%);"></div>
+                                <i class='bx bx-check'></i>
+                            </div>
+                            <div class="color-option" role="button" data-hue="210" aria-label="Blue theme">
+                                <div class="color-dot" style="background: hsl(210, 80%, 60%);"></div>
+                                <i class='bx bx-check'></i>
+                            </div>
+                            <div class="color-option" role="button" data-hue="340" aria-label="Pink theme">
+                                <div class="color-dot" style="background: hsl(340, 82%, 60%);"></div>
+                                <i class='bx bx-check'></i>
+                            </div>
+                            <div class="color-option" role="button" data-hue="150" aria-label="Green theme">
+                                <div class="color-dot" style="background: hsl(150, 60%, 50%);"></div>
+                                <i class='bx bx-check'></i>
+                            </div>
+                            <div class="color-option" role="button" data-hue="30" aria-label="Orange theme">
+                                <div class="color-dot" style="background: hsl(30, 90%, 60%);"></div>
+                                <i class='bx bx-check'></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h3 class="card-title">Theme Mode</h3>
+                        <div id="theme-mode-selector" class="segmented-control">
+                            <button class="segmented-control-button" data-theme-mode="light">Light</button>
+                            <button class="segmented-control-button" data-theme-mode="dark">Dark</button>
+                            <button class="segmented-control-button active" data-theme-mode="auto">Auto</button>
+                        </div>
+
+                        <div id="oled-mode-container" class="settings-list hidden"
+                            style="gap: 1rem; margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border-color);">
+                            <div class="settings-item" style="border-bottom: none; padding-bottom: 0;">
+                                <span class="setting-icon appearance bx bxs-moon" aria-hidden="true"></span>
+                                <span>"True Black" for OLED</span>
+                                <label class="switch" style="margin-left: auto;">
+                                    <input type="checkbox" id="oledModeToggle">
+                                    <span class="slider round"></span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h3 class="card-title">Text Size</h3>
+                        <div id="text-size-selector" class="segmented-control">
+                            <button class="segmented-control-button" data-text-size="0.9">Small</button>
+                            <button class="segmented-control-button active" data-text-size="1">Default</button>
+                            <button class="segmented-control-button" data-text-size="1.1">Large</button>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="settings-list" style="gap: 1rem;">
+                            <div class="settings-item">
+                                <span class="setting-icon power-saving bx bx-run" aria-hidden="true"></span>
+                                <span>Reduce Motion</span>
+                                <label class="switch" style="margin-left: auto;">
+                                    <input type="checkbox" id="reduceMotionToggle">
+                                    <span class="slider round"></span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="feedback-view" class="sub-page hidden">
+                    <header class="page-header">
+                        <button class="back-button icon-button" aria-label="Go back to profile"><i
+                                class='bx bx-chevron-left' aria-hidden="true"></i></button>
+                        <h1 class="page-title" data-translate-key="feedback_title">Help & Feedback</h1>
+                        <div style="width: 24px;"></div>
+                    </header>
+                    <div>
+                        <button id="viewMyFeedbackBtn" class="button"
+                            style="background-color: var(--accent-color-light); color: var(--accent-color); width: 100%;">
+                            View My Submissions
+                        </button>
+                    </div>
+                    <form id="feedbackForm" class="card">
+                        <div class="form-field">
+                            <label for="feedbackCategory" data-translate-key="feedback_category">Category</label>
+                            <div id="feedbackCategorySelect" class="custom-select" data-value="Report a Bug">
+                                <div class="select-trigger" role="button" aria-haspopup="listbox" aria-expanded="false">
+                                    <span data-translate-key="feedback_cat_bug">Report a Bug</span>
+                                    <i class='bx bx-chevron-down' aria-hidden="true"></i>
+                                </div>
+                                <div class="select-options" role="listbox">
+                                    <div class="select-option selected" data-value="Report a Bug"
+                                        data-translate-key="feedback_cat_bug" role="option">Report a Bug</div>
+                                    <div class="select-option" data-value="Suggest a Feature"
+                                        data-translate-key="feedback_cat_feature" role="option">Suggest a Feature</div>
+                                    <div class="select-option" data-value="General Question"
+                                        data-translate-key="feedback_cat_question" role="option">General Question</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-field">
+                            <label for="feedbackMessage" data-translate-key="feedback_message">Message</label>
+                            <textarea id="feedbackMessage" required class="form-input" rows="6"
+                                placeholder="Please provide as much detail as possible..."
+                                style="min-height: 120px; max-height: 200px;"></textarea>
+                        </div>
+                        <button type="submit" class="button button-primary">
+                            <span class="button-text" data-translate-key="feedback_submit_btn">Submit Feedback</span>
+                            <span class="login-spinner hidden"></span>
+                        </button>
+                    </form>
+                </div>
+
+                <div id="my-feedback-view" class="sub-page hidden">
+                    <header class="page-header">
+                        <button class="back-button icon-button" aria-label="Go back to feedback form"><i
+                                class='bx bx-chevron-left' aria-hidden="true"></i></button>
+                        <h1 class="page-title">My Feedback</h1>
+                        <div style="width: 24px;"></div>
+                    </header>
+                    <div id="my-feedback-list" class="list-container" style="gap: 1rem;">
+                        <div class="skeleton skeleton-card"></div>
+                        <div class="skeleton skeleton-card"></div>
+                        <div class="skeleton skeleton-card"></div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+
+        <nav class="bottom-nav">
+            <a href="#home" class="bottom-nav-link active">
+                <i class='bx bx-home-alt' aria-hidden="true"></i>
+                <span data-translate-key="nav_home">Home</span>
+            </a>
+            <a href="#attendance" class="bottom-nav-link">
+                <i class='bx bx-calendar-check' aria-hidden="true"></i>
+                <span data-translate-key="nav_attendance">Attendance</span>
+            </a>
+            <a href="#schedule" class="bottom-nav-link">
+                <i class='bx bx-calendar' aria-hidden="true"></i>
+                <span data-translate-key="nav_schedule">Schedule</span>
+            </a>
+            <a href="#result" class="bottom-nav-link">
+                <i class='bx bx-user-check' aria-hidden="true"></i>
+                <span data-translate-key="nav_result">Result</span>
+            </a>
+            <a href="#profile" class="bottom-nav-link">
+                <i class='bx bx-user-circle' aria-hidden="true"></i>
+                <span data-translate-key="nav_profile">Profile</span>
+            </a>
+        </nav>
+    </div>
+
+    <div id="customConfirmModal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <h3 id="modalTitle">Confirm Action</h3>
+            <p id="modalMessage">Are you sure you want to proceed?</p>
+            <div class="modal-actions">
+                <button id="modalCancelBtn" class="button button-secondary"
+                    data-translate-key="modal_cancel">Cancel</button>
+                <button id="modalConfirmBtn" class="button button-primary"
+                    data-translate-key="modal_confirm">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/service-worker.js')
+                    .then(registration => console.log('Service Worker registered!'))
+                    .catch(err => console.error('Service Worker registration failed: ', err));
+            });
+        }
+    </script>
+
+</body>
+
+</html>

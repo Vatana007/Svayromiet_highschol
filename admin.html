@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Admin | Glassmorphism</title>
+    <!-- Modern Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Kantumruy+Pro:wght@400;500;600&display=swap"
+        rel="stylesheet">
+    <!-- Remix Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    <link rel="stylesheet" href="admin-style.css">
+</head>
+
+<body>
+    <!-- Ambient Animated Background for Glass Effect -->
+    <div class="ambient-bg">
+        <div class="color-blob blob-1"></div>
+        <div class="color-blob blob-2"></div>
+        <div class="color-blob blob-3"></div>
+    </div>
+
+    <div id="globalLoader" class="glass-loader"></div>
+
+    <!-- Login Screen -->
+    <div id="authLayer" class="auth-container">
+        <div class="auth-panel glass-panel">
+            <div class="auth-brand">
+                <div class="logo-box glass-icon"><i class="ri-triangle-line"></i></div>
+                <h2>Admin Portal</h2>
+            </div>
+            <p>Sign in to manage the system</p>
+            <form id="loginForm">
+                <div class="field-group">
+                    <i class="ri-user-line"></i>
+                    <input type="text" id="admUser" class="glass-input" placeholder="Username" required>
+                </div>
+                <div class="field-group">
+                    <i class="ri-lock-line"></i>
+                    <input type="password" id="admPass" class="glass-input" placeholder="Password" required>
+                </div>
+                <button type="submit" class="btn-glass-primary full">Sign In <i
+                        class="ri-arrow-right-line"></i></button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Main App -->
+    <div id="appShell" class="shell hidden">
+        <div id="mobileOverlay" class="mobile-overlay"></div>
+
+        <!-- Sidebar -->
+        <aside id="sideNav" class="side-nav glass-panel">
+            <div class="nav-header">
+                <div class="brand-info">
+                    <div class="logo-box-sm glass-icon"><i class="ri-triangle-line"></i></div>
+                    <div>
+                        <h4>Svayromiet</h4>
+                        <span class="badge-glass">WORKSPACE</span>
+                    </div>
+                </div>
+                <button id="closeMenuBtn" class="icon-btn-ghost"><i class="ri-close-line"></i></button>
+            </div>
+
+            <div class="nav-scroller custom-scroll">
+                <div class="nav-label">Core</div>
+                <a href="#" class="nav-item active" data-tab="overview"><i class="ri-dashboard-line"></i>
+                    <span>Dashboard</span></a>
+                <a href="#" class="nav-item" data-tab="students"><i class="ri-group-line"></i> <span>Students</span></a>
+
+                <div class="nav-label">Academic</div>
+                <a href="#" class="nav-item" data-tab="schedule"><i class="ri-calendar-event-line"></i>
+                    <span>Schedule</span></a>
+                <a href="#" class="nav-item" data-tab="exams"><i class="ri-file-edit-line"></i> <span>Exams</span></a>
+
+                <div class="nav-label">Operations</div>
+                <a href="#" class="nav-item" data-tab="requests">
+                    <i class="ri-mail-check-line"></i> <span>Requests</span>
+                    <span id="badgeReq" class="badge-pill hidden">0</span>
+                </a>
+                <a href="#" class="nav-item" data-tab="announcements"><i class="ri-megaphone-line"></i>
+                    <span>Announcements</span></a>
+                <a href="#" class="nav-item" data-tab="feedback"><i class="ri-message-3-line"></i>
+                    <span>Feedback</span></a>
+            </div>
+
+            <div class="nav-footer">
+                <div class="user-profile">
+                    <div class="avatar-glass"><i class="ri-user-smile-line"></i></div>
+                    <div class="info">
+                        <span id="admName">Admin</span>
+                        <small>Superuser</small>
+                    </div>
+                </div>
+                <button id="logoutBtn" class="icon-btn-ghost danger" title="Logout"><i
+                        class="ri-logout-circle-line"></i></button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-view">
+            <!-- Glass Header -->
+            <header class="top-bar glass-panel-flat">
+                <div class="top-left">
+                    <button id="openMenuBtn" class="icon-btn-ghost mobile-only"><i class="ri-menu-4-line"></i></button>
+                    <div>
+                        <h1 id="pageHeader">Overview</h1>
+                        <span id="greetingText" class="subtitle">Good Morning!</span>
+                    </div>
+                </div>
+                <div class="top-right">
+                    <button class="search-trigger glass-input" onclick="openCommandPalette()">
+                        <i class="ri-search-line"></i> <span class="pc-only">Search...</span> <kbd class="pc-only">Ctrl
+                            K</kbd>
+                    </button>
+                    <button id="themeToggle" class="icon-btn-ghost"><i class="ri-moon-line"></i></button>
+                    <button class="icon-btn-ghost" onclick="refreshAll()" title="Refresh"><i
+                            class="ri-refresh-line"></i></button>
+                </div>
+            </header>
+
+            <div class="content-body custom-scroll">
+
+                <!-- 1. OVERVIEW TAB -->
+                <div id="tab-overview" class="tab-pane active">
+                    <div class="kpi-grid">
+                        <div class="kpi-card glass-card">
+                            <div class="kpi-top">
+                                <div class="icon-box-md blue"><i class="ri-user-line"></i></div>
+                                <span class="trend up"><i class="ri-arrow-right-up-line"></i> Live</span>
+                            </div>
+                            <div class="kpi-val" id="statStudents">--</div>
+                            <div class="kpi-lbl">Total Students</div>
+                        </div>
+                        <div class="kpi-card glass-card">
+                            <div class="kpi-top">
+                                <div class="icon-box-md orange"><i class="ri-time-line"></i></div>
+                                <span class="trend down"><i class="ri-loader-4-line ri-spin"></i> Action</span>
+                            </div>
+                            <div class="kpi-val" id="statPending">--</div>
+                            <div class="kpi-lbl">Pending Requests</div>
+                        </div>
+                        <div class="kpi-card glass-card">
+                            <div class="kpi-top">
+                                <div class="icon-box-md green"><i class="ri-macbook-line"></i></div>
+                                <span class="trend up" id="liveClock">00:00</span>
+                            </div>
+                            <div class="kpi-val" id="statActive">--</div>
+                            <div class="kpi-lbl">Active Today</div>
+                        </div>
+                    </div>
+
+                    <div class="split-view">
+                        <div class="glass-card">
+                            <div class="card-head">
+                                <h3>Recent Activity</h3>
+                                <button class="btn-text" onclick="nav('requests')">View All</button>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="glass-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Student</th>
+                                            <th>Category</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tblRecent"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="glass-card">
+                            <div class="card-head">
+                                <h3>Quick Launch</h3>
+                            </div>
+                            <div class="action-grid">
+                                <button class="action-btn glass-btn" onclick="nav('announcements')">
+                                    <i class="ri-quill-pen-line"></i> <span>New Post</span>
+                                </button>
+                                <button class="action-btn glass-btn" onclick="nav('schedule')">
+                                    <i class="ri-calendar-check-line"></i> <span>Schedule</span>
+                                </button>
+                                <button class="action-btn glass-btn" onclick="nav('requests')">
+                                    <i class="ri-inbox-line"></i> <span>Inbox</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. STUDENTS TAB -->
+                <div id="tab-students" class="tab-pane">
+                    <div class="glass-card full-height">
+                        <div class="card-head stack-mobile">
+                            <div class="search-box">
+                                <i class="ri-search-2-line"></i>
+                                <input type="text" id="searchStud" class="glass-input"
+                                    placeholder="Search ID, Name, Grade...">
+                            </div>
+                            <div class="flex-gap">
+                                <button class="btn-glass" onclick="exportStudentsLocal()"><i
+                                        class="ri-download-line"></i> CSV</button>
+                                <button class="btn-glass-primary" onclick="exportStudents('google_sheet')"><i
+                                        class="ri-google-fill"></i> Sheet</button>
+                            </div>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="glass-table">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Khmer Name</th>
+                                        <th>English Name</th>
+                                        <th>Sex</th>
+                                        <th>DOB</th>
+                                        <th>Phone</th>
+                                        <th>Grade</th>
+                                        <th>Gen</th>
+                                        <th>Section</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tblStudents"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. SCHEDULE TAB -->
+                <div id="tab-schedule" class="tab-pane">
+                    <div class="glass-card full-height">
+                        <div class="card-head">
+                            <h3>Master Schedule</h3>
+                            <div class="toggle-pill">
+                                <button class="toggle-btn active" id="btn-list">List</button>
+                                <button class="toggle-btn" id="btn-table">Grid</button>
+                            </div>
+                        </div>
+
+                        <div id="schedule-list-wrapper" class="table-responsive flex-col">
+                            <div class="filter-bar">
+                                <select id="filterDay" class="glass-input">
+                                    <option value="All">All Days</option>
+                                    <option value="Monday">Monday</option>
+                                    <option value="Tuesday">Tuesday</option>
+                                    <option value="Wednesday">Wednesday</option>
+                                    <option value="Thursday">Thursday</option>
+                                    <option value="Friday">Friday</option>
+                                    <option value="Saturday">Saturday</option>
+                                </select>
+                            </div>
+                            <table class="glass-table">
+                                <thead>
+                                    <tr>
+                                        <th>Day</th>
+                                        <th>Time</th>
+                                        <th>Subject</th>
+                                        <th>Teacher</th>
+                                        <th>Grade</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tblSchedule"></tbody>
+                            </table>
+                        </div>
+
+                        <div id="schedule-table-wrapper" class="table-responsive hidden">
+                            <table class="grid-table" id="master-schedule-table"></table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 4. EXAMS TAB -->
+                <div id="tab-exams" class="tab-pane">
+                    <div class="glass-card full-height">
+                        <div class="card-head stack-mobile">
+                            <h3>Exam Management</h3>
+                            <button id="btnAddExam" class="btn-glass-primary" onclick="openExamModal('add')"><i
+                                    class="ri-add-line"></i> Create Exam</button>
+                        </div>
+                        <div class="filter-bar multi">
+                            <select id="filterExSubj" class="glass-input" onchange="applyExamFilters()">
+                                <option value="All">Subjects</option>
+                            </select>
+                            <select id="filterExType" class="glass-input" onchange="applyExamFilters()">
+                                <option value="All">Types</option>
+                            </select>
+                            <select id="filterExGrade" class="glass-input" onchange="applyExamFilters()">
+                                <option value="All">Grades</option>
+                            </select>
+                            <select id="filterExGen" class="glass-input" onchange="applyExamFilters()">
+                                <option value="All">Gens</option>
+                            </select>
+                            <button class="btn-glass icon-only" onclick="resetExamFilters()" title="Reset"><i
+                                    class="ri-refresh-line"></i></button>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="glass-table">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Subject</th>
+                                        <th>Type</th>
+                                        <th>Time</th>
+                                        <th>Grade</th>
+                                        <th>Gen</th>
+                                        <th class="text-right">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tblExams"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 5. REQUESTS TAB -->
+                <div id="tab-requests" class="tab-pane">
+                    <div class="glass-card full-height">
+                        <div class="card-head">
+                            <h3>Permissions</h3>
+                            <div class="toggle-pill">
+                                <button class="toggle-btn active" onclick="filterReq('Pending')">Pending</button>
+                                <button class="toggle-btn" onclick="filterReq('Approved')">Approved</button>
+                                <button class="toggle-btn" onclick="filterReq('All')">History</button>
+                            </div>
+                        </div>
+                        <div class="feed-scroll" id="requestListGrid"></div>
+                    </div>
+                </div>
+
+                <!-- 6. ANNOUNCEMENTS TAB -->
+                <div id="tab-announcements" class="tab-pane">
+                    <div class="split-view">
+                        <div class="glass-card">
+                            <div class="card-head">
+                                <h3>Broadcast News</h3>
+                            </div>
+                            <form id="formAnnounce" class="p-20">
+                                <div class="form-group">
+                                    <label>Headline</label>
+                                    <input type="text" id="annTitle" class="glass-input"
+                                        placeholder="e.g. Holiday Notice..." required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Message Content</label>
+                                    <textarea id="annMsg" class="glass-input" rows="5" placeholder="Write something..."
+                                        required></textarea>
+                                </div>
+                                <div class="form-group">
+                                    <label>Date</label>
+                                    <input type="date" id="annDate" class="glass-input" required>
+                                </div>
+                                <button type="submit" class="btn-glass-primary full mt-2"><i
+                                        class="ri-send-plane-fill"></i> Publish Post</button>
+                            </form>
+                        </div>
+                        <div class="glass-card">
+                            <div class="card-head">
+                                <h3>Live Feed</h3>
+                            </div>
+                            <div class="feed-scroll" id="listAnnouncements"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 7. FEEDBACK TAB -->
+                <div id="tab-feedback" class="tab-pane">
+                    <div class="glass-card full-height">
+                        <div class="card-head">
+                            <h3>Student Feedback</h3>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="glass-table">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Student ID</th>
+                                        <th>Category</th>
+                                        <th>Message</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tblFeedback"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- COMMAND PALETTE -->
+    <div id="commandPalette" class="custom-modal-overlay">
+        <div class="palette-box glass-panel">
+            <div class="search-box huge">
+                <i class="ri-search-line"></i>
+                <input type="text" id="globalSearchInput" class="glass-input-borderless"
+                    placeholder="Search pages, actions, or type a command...">
+                <kbd class="glass-kbd">ESC</kbd>
+            </div>
+            <div class="palette-results">
+                <div class="nav-label">Quick Links</div>
+                <div class="palette-item" onclick="nav('students'); closeCommandPalette();"><i
+                        class="ri-group-line"></i> View Students</div>
+                <div class="palette-item" onclick="nav('schedule'); closeCommandPalette();"><i
+                        class="ri-calendar-line"></i> Manage Schedule</div>
+                <div class="palette-item" onclick="nav('announcements'); closeCommandPalette();"><i
+                        class="ri-quill-pen-line"></i> Create Announcement</div>
+                <div class="palette-item"
+                    onclick="document.getElementById('themeToggle').click(); closeCommandPalette();"><i
+                        class="ri-contrast-2-line"></i> Toggle Dark Mode</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TOAST NOTIFICATIONS -->
+    <div id="toast-container"></div>
+
+    <!-- MODALS -->
+    <div id="confirmModal" class="custom-modal-overlay">
+        <div class="modal-box glass-panel">
+            <div class="modal-icon danger"><i class="ri-error-warning-fill"></i></div>
+            <h3>Are you sure?</h3>
+            <p>This action cannot be undone.</p>
+            <div class="modal-actions">
+                <button type="button" id="btnCancel" class="btn-glass">Cancel</button>
+                <button type="button" id="btnConfirm" class="btn-glass-primary danger-btn">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="scheduleModal" class="custom-modal-overlay">
+        <div class="modal-box glass-panel">
+            <h3 id="modalSchedTitle" class="mb-2">Subject</h3>
+            <div class="info-list glass-input">
+                <div class="info-item"><span>Instructor</span><strong id="modalSchedTeacher">-</strong></div>
+                <div class="info-item"><span>Target Grade</span><strong id="modalSchedGrade">-</strong></div>
+                <div class="info-item"><span>Location</span><strong id="modalSchedRoom">-</strong></div>
+                <div class="info-item"><span>Time Slot</span><strong id="modalSchedTime">-</strong></div>
+            </div>
+            <button class="btn-glass full mt-2" onclick="closeScheduleModal()">Close</button>
+        </div>
+    </div>
+
+    <div id="examModal" class="custom-modal-overlay">
+        <div class="modal-box wide glass-panel">
+            <div class="card-head p-0 mb-3 border-0">
+                <h3 id="examModalTitle">Manage Exam</h3>
+                <button class="icon-btn-ghost" onclick="closeExamModal()"><i class="ri-close-line"></i></button>
+            </div>
+            <form id="formExam">
+                <input type="hidden" id="exManageType" value="add">
+                <input type="hidden" id="origExSubj"><input type="hidden" id="origExDate">
+                <input type="hidden" id="origExGrade"><input type="hidden" id="origExGen">
+
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label>Exam Type</label>
+                        <select id="exType" class="glass-input" required>
+                            <option value="Midterm">Midterm</option>
+                            <option value="Final">Final</option>
+                            <option value="Quiz">Quiz</option>
+                            <option value="Mock Exam">Mock Exam</option>
+                        </select>
+                    </div>
+                    <div class="form-group"><label>Subject</label><input type="text" id="exSubj" class="glass-input"
+                            required></div>
+                    <div class="form-group"><label>Date</label><input type="date" id="exDate" class="glass-input"
+                            required></div>
+                    <div class="form-group"><label>Grade</label><input type="text" id="exGrade" class="glass-input"
+                            required></div>
+                    <div class="form-group"><label>Generation</label><input type="number" id="exGen" class="glass-input"
+                            required></div>
+                </div>
+                <div class="grid-2">
+                    <div class="form-group"><label>Start Time</label><input type="time" id="exStart" class="glass-input"
+                            required></div>
+                    <div class="form-group"><label>End Time</label><input type="time" id="exEnd" class="glass-input"
+                            required></div>
+                </div>
+                <div class="modal-actions mt-3 pt-3 border-top">
+                    <button type="button" class="btn-glass" onclick="closeExamModal()">Cancel</button>
+                    <button type="submit" id="btnSaveExam" class="btn-glass-primary">Save Exam</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="admin-script.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,23 @@
+{
+    "name": "High School 8888",
+    "short_name": "វិទ្យាល័យស្វាយរមៀត",
+    "start_url": "index.html",
+    "display": "standalone",
+    "background_color": "#f8fafc",
+    "theme_color": "#1e293b",
+    "description": "Student Information Viewer System for វិទ្យាល័យស្វាយរមៀត.",
+    "icons": [
+        {
+            "src": "images/high_logo.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "images/high_logo.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any maskable"
+        }
+    ]
+}
