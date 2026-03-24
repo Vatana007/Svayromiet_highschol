@@ -24,7 +24,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
     checkAppVersion();
     // --- CONFIGURATION ---
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxpeIu-fjcJa2Xy-hMyhSR72ofeR_DWsCp7xJyT1hm-umZWe77UfcdgtNW1lYHqL93v_A/exec';
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyU-gBFaLZmSXRVd8VhIsRo8-3dKd1L6PbnXdXqZxJtWrJM1tGI7J5hcXWBL3IlfDnG/exec';
     const ALL_SEMESTERS = ['1', '2'];
     let currentSemester = ALL_SEMESTERS[ALL_SEMESTERS.length - 1];
     let lastFocusedElement = null;
@@ -136,30 +136,36 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function getSubjectColor(subject) {
         const s = (subject || '').toLowerCase();
-        if (s.includes('math')) return '#FF5252';
-        if (s.includes('physic')) return '#448AFF';
-        if (s.includes('chem')) return '#E040FB';
-        if (s.includes('bio')) return '#00E676';
-        if (s.includes('history')) return '#FFAB00';
-        if (s.includes('english')) return '#00BCD4';
-        if (s.includes('khmer')) return '#795548';
-        if (s.includes('geo')) return '#FF5722';
-        if (s.includes('ict') || s.includes('comp')) return '#607D8B';
-        return '#7B61FF';
+        if (s.includes('math') || s.includes('គណិត')) return '#FF5252'; // ក្រហម
+        if (s.includes('physic') || s.includes('រូប')) return '#448AFF'; // ខៀវ
+        if (s.includes('chem') || s.includes('គីមី')) return '#E040FB'; // ស្វាយ
+        if (s.includes('bio') || s.includes('ជីវ')) return '#00E676'; // បៃតង
+        if (s.includes('history') || s.includes('ប្រវត្តិ')) return '#FFAB00'; // លឿង
+        if (s.includes('english') || s.includes('អង់គ្លេស')) return '#00BCD4'; // ខៀវខ្ចី
+
+        // កែពណ៌ខាងក្រោមនេះឲ្យភ្លឺជាងមុន
+        if (s.includes('khmer') || s.includes('ខ្មែរ')) return '#E91E63'; // ពណ៌ផ្កាឈូក/ស៊ីជម្ពូដិត
+        if (s.includes('geo') || s.includes('ផែនដី') || s.includes('ភូមិ')) return '#FF7043'; // ពណ៌ទឹកក្រូច
+        if (s.includes('ict') || s.includes('comp') || s.includes('កុំព្យូទ័រ')) return '#607D8B'; // ប្រផេះ
+        if (s.includes('សីលធម៌') || s.includes('ពលរដ្ឋ')) return '#009688'; // ពណ៌បៃតងចាស់ (Teal)
+
+        return '#7B61FF'; // ពណ៌ Default (ស្វាយ)
     }
 
     function getSubjectIcon(subject) {
         const s = (subject || '').toLowerCase();
-        if (s.includes('math')) return 'bx bx-calculator';
-        if (s.includes('physic')) return 'bx bx-atom';
-        if (s.includes('chem')) return 'bx bx-flask';
-        if (s.includes('bio')) return 'bx bx-dna';
-        if (s.includes('history')) return 'bx bxs-landmark';
-        if (s.includes('english')) return 'bx bx-book-open';
-        if (s.includes('khmer')) return 'bx bx-book-alt';
-        if (s.includes('geo')) return 'bx bx-globe';
-        if (s.includes('ict') || s.includes('comp')) return 'bx bx-laptop';
-        return 'bx bx-book';
+        // បន្ថែមការសម្គាល់ឈ្មោះមុខវិជ្ជាជាភាសាខ្មែរ
+        if (s.includes('math') || s.includes('គណិត')) return 'bx bx-calculator';
+        if (s.includes('physic') || s.includes('រូប')) return 'bx bx-atom';
+        if (s.includes('chem') || s.includes('គីមី')) return 'bx bx-test-tube';
+        if (s.includes('bio') || s.includes('ជីវ')) return 'bx bx-dna';
+        if (s.includes('history') || s.includes('ប្រវត្តិ')) return 'bx bxs-landmark';
+        if (s.includes('english') || s.includes('អង់គ្លេស')) return 'bx bx-book-open';
+        if (s.includes('khmer') || s.includes('ខ្មែរ')) return 'bx bx-book-alt';
+        if (s.includes('geo') || s.includes('ផែនដី') || s.includes('ភូមិ')) return 'bx bx-globe';
+        if (s.includes('ict') || s.includes('comp') || s.includes('កុំព្យូទ័រ')) return 'bx bx-laptop';
+        if (s.includes('សីលធម៌') || s.includes('ពលរដ្ឋ')) return 'bx bx-group';
+        return 'bx bx-book'; // Icon Default
     }
 
     // --- LOAD TRANSLATIONS (WITH FALLBACK) ---
@@ -723,16 +729,24 @@ document.addEventListener('DOMContentLoaded', function () {
             ptrState.pullDistance = Math.max(0, currentY - ptrState.startY);
 
             if (ptrState.pullDistance > 0) {
-                if (e.cancelable) e.preventDefault();
+                // Prevent default scrolling when pulling down at the top
+                if (ui.mainContent.scrollTop <= 0 && e.cancelable) {
+                    e.preventDefault();
+                }
+
                 const indicator = document.getElementById('pull-to-refresh-indicator');
                 const spinner = indicator.querySelector('.spinner');
-                const pullThreshold = 300;
+
+                // Apply a "rubber-band" resistance effect
+                const resistance = 0.4;
+                const visualPull = ptrState.pullDistance * resistance;
+                const pullThreshold = 70; // Visual distance needed to trigger
+
                 indicator.style.opacity = '1';
-                const maxPullHeight = window.innerHeight * 0.15;
-                const dampenedDistance = ptrState.pullDistance / 2.5;
-                const finalDistance = Math.min(dampenedDistance, maxPullHeight);
-                ui.mainContent.style.transform = `translateY(${finalDistance}px)`;
-                const pullProgress = Math.min(1, ptrState.pullDistance / pullThreshold);
+                ui.mainContent.style.transform = `translateY(${visualPull}px)`;
+
+                // Scale and rotate spinner based on progress
+                const pullProgress = Math.min(1, visualPull / pullThreshold);
                 spinner.style.opacity = pullProgress;
                 spinner.style.transform = `scale(${0.5 + pullProgress * 0.5}) rotate(${pullProgress * 360}deg)`;
             }
@@ -742,35 +756,72 @@ document.addEventListener('DOMContentLoaded', function () {
     async function handleTouchEnd() {
         if (ptrState.isDragging && !ptrState.isRefreshing) {
             ptrState.isDragging = false;
+
             const indicator = document.getElementById('pull-to-refresh-indicator');
             const spinner = indicator.querySelector('.spinner');
-            const pullThreshold = 300;
 
-            ui.mainContent.style.transition = 'transform 0.3s ease-out';
-            indicator.style.transition = 'opacity 0.3s ease-out';
-            spinner.style.transition = '';
+            // ១. ធ្វើឲ្យអារម្មណ៍ពេលទាញមានភាពរហ័ស និងឆ្លើយតបលឿនជាងមុន
+            const resistance = 0.5; // កើនពី 0.4 ធ្វើឲ្យទាញទៅមានទម្ងន់ជាងមុន
+            const visualPull = ptrState.pullDistance * resistance;
+            const pullThreshold = 55; // បន្ថយពី 70 មកត្រឹម 55px ដើម្បីឲ្យឆាប់ Refresh មិនបាច់ទាញជ្រៅពេក
 
-            if (ptrState.pullDistance > pullThreshold) {
+            // ២. បន្ថយរយៈពេលចលនា Animation ពី 0.3s មកត្រឹម 0.2s ឲ្យលោតញាប់ជាងមុន
+            ui.mainContent.style.transition = 'transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1)';
+            if (indicator) indicator.style.transition = 'opacity 0.2s ease-out';
+
+            if (visualPull >= pullThreshold) {
                 ptrState.isRefreshing = true;
-                ui.mainContent.style.transform = 'translateY(50px)';
-                spinner.style.removeProperty('transform');
-                spinner.style.opacity = '1';
-                spinner.classList.add('is-refreshing');
-                await refreshData(false);
+
+                // រុញ Content ចុះក្រោម 60px
+                ui.mainContent.style.transform = 'translateY(60px)';
+                if (spinner) {
+                    spinner.style.transform = '';
+                    spinner.classList.add('is-refreshing');
+                }
+
+                // ៣. ទាញយកទិន្នន័យថ្មី (ចំណុចដែលធ្វើឲ្យលឿន!)
+                try {
+                    const token = localStorage.getItem('token');
+                    if (token) {
+                        const activeTab = document.querySelector('.bottom-nav-link.active');
+                        const currentHash = activeTab ? activeTab.getAttribute('href') : '#home';
+
+                        // បង្កើតកញ្ចប់ទាញទិន្នន័យ (Task)
+                        const fetchTasks = [refreshData(false)];
+
+                        // បើនៅផ្ទាំងពិន្ទុ ឬវត្តមាន ឲ្យវាទាញទិន្នន័យធំ "ព្រមគ្នា" ជាមួយទិន្នន័យធម្មតា
+                        if (['#result', '#attendance', '#schedule'].includes(currentHash)) {
+                            dataCache.isHeavyDataLoaded = false;
+                            fetchTasks.push(fetchHeavyDashboardData(token));
+                        }
+
+                        // បញ្ជាឲ្យទាញយកទិន្នន័យទាំងអស់ "ព្រមគ្នាក្នុងពេលតែមួយ" (ចំណេញពេល៥០%)
+                        await Promise.all(fetchTasks);
+
+                        // គូរអេក្រង់ឡើងវិញពេលទាញចប់
+                        rerenderCurrentSection();
+                    }
+                } catch (error) {
+                    console.error("Error refreshing:", error);
+                }
+
+                // ៤. ទាញ Content ត្រឡប់ទៅលើវិញយ៉ាងរហ័ស
                 ptrState.isRefreshing = false;
-                spinner.classList.remove('is-refreshing');
+                if (spinner) spinner.classList.remove('is-refreshing');
                 ui.mainContent.style.transform = 'translateY(0)';
-                indicator.style.opacity = '0';
+                if (indicator) indicator.style.opacity = '0';
+                if (spinner) spinner.style.transform = 'scale(0.5)';
             } else {
                 ui.mainContent.style.transform = 'translateY(0)';
-                indicator.style.opacity = '0';
-                spinner.style.transform = '';
+                if (indicator) indicator.style.opacity = '0';
+                if (spinner) spinner.style.transform = 'scale(0.5)';
             }
+
             ptrState.pullDistance = 0;
+
             setTimeout(() => {
                 ui.mainContent.style.transition = '';
-                indicator.style.transition = '';
-            }, 300);
+            }, 200); // បន្ថយពេលវេលា Cleanup មកត្រឹម 200ms
         }
     }
 
@@ -804,7 +855,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
             rerenderCurrentSection();
 
-            if (document.getElementById('permission-request-view').classList.contains('active')) {
+            // ឆែកមើលថាតើសិស្សកំពុងបើកមើលផ្ទាំងសុំច្បាប់ឬអត់
+            const permView = document.getElementById('permission-request-view');
+            if (permView && !permView.classList.contains('hidden')) {
                 await checkExistingPermissionRequest();
             }
 
@@ -1700,7 +1753,8 @@ document.addEventListener('DOMContentLoaded', function () {
         }, `<div class="card"><p>${t.msg_no_exam_schedule || 'No exam schedules have been posted.'}</p></div>`);
     }
 
-    // --- Replace renderResult in script.js ---
+    // --- renderResult in script.js ---
+    // --- renderResult in script.js ---
     function renderResult() {
         if (!dataCache.profile) return;
 
@@ -1709,13 +1763,38 @@ document.addEventListener('DOMContentLoaded', function () {
         const gradeLabel = lang === 'km' ? 'ថ្នាក់ទី' : 'Grade';
         const gradeFilter = document.getElementById('gradeFilterResult');
 
+        // ─── METADATA SKIP LIST ───────────────────────────────────────────────
+        // Columns that must NEVER appear as a subject row
+        const METADATA_SKIP = [
+            // English
+            'studentid', 'student_id', 'id', 'no', 'grade', 'semester', 'total',
+            'average', 'rank', 'index', 'class', 'section', 'name', 'gender',
+            'sex', 'note', 'score', 'totalscore',
+            // Khmer — matches your actual sheet column headers
+            'ល.រ', 'អូរលេខ', 'អត្តលេខ', 'លេខសិស្ស', 'លេខ',
+            'គោត្តនាម និង នាម', 'គោត្តនាម', 'នាម', 'ភេទ',
+            'ចំណាត់ថ្នាក់', 'មធ្យមភាគ', 'ពិន្ទុសរុប', 'និទ្ទេស',
+            'ផ្សេងៗ', 'ចំណាំ', 'ថ្នាក់'
+        ];
+
+        // ─── GRADE COLOR HELPER ───────────────────────────────────────────────
+        const getGradeColor = (grade) => {
+            const g = (grade || '').toUpperCase();
+            if (g === 'A') return '#10B981';
+            if (g === 'B') return '#3B82F6';
+            if (g === 'C') return '#F59E0B';
+            if (g === 'D' || g === 'E') return '#F97316';
+            if (g === 'F') return '#EF4444';
+            return '#8B5CF6';
+        };
+
+        // ─── GRADE FILTER DROPDOWN ────────────────────────────────────────────
         const gradeMap = {};
         const profileGrade = dataCache.profile?.grade;
         const profileClass = dataCache.profile?.class;
 
         if (profileGrade) {
             gradeMap[profileGrade] = new Set();
-            // Prevent major words from bleeding into dropdown
             if (profileClass && !profileClass.includes('វិទ្យា')) {
                 gradeMap[profileGrade].add(profileClass);
             }
@@ -1745,25 +1824,22 @@ document.addEventListener('DOMContentLoaded', function () {
             availableGrades.forEach(g => {
                 const sections = Array.from(gradeMap[g]);
                 let displayStr = `${gradeLabel} ${formatNumber(g)}`;
-                if (sections.length > 0) {
-                    displayStr += `[${sections.join(', ')}]`; // e.g. 10[10A, 10B]
-                }
-
+                if (sections.length > 0) displayStr += ` [${sections.join(', ')}]`;
                 const isSelected = String(g) === selectedGrade ? 'selected' : '';
                 html += `<div class="select-option ${isSelected}" data-value="${g}">${displayStr}</div>`;
             });
-
             gradeOptionsContainer.innerHTML = html || `<div class="select-option selected" data-value="${selectedGrade}">${gradeLabel} ${formatNumber(selectedGrade)}</div>`;
 
             const trigger = gradeFilter.querySelector('.select-trigger span');
             if (trigger) {
                 const triggerSections = gradeMap[selectedGrade] ? Array.from(gradeMap[selectedGrade]) : [];
                 let triggerStr = `${gradeLabel} ${formatNumber(selectedGrade)}`;
-                if (triggerSections.length > 0) triggerStr += `[${triggerSections.join(', ')}]`;
+                if (triggerSections.length > 0) triggerStr += ` [${triggerSections.join(', ')}]`;
                 trigger.textContent = triggerStr;
             }
         }
 
+        // ─── SEMESTER / MONTH FILTER DROPDOWN ────────────────────────────────
         const semesterFilter = ui.semesterFilterResult;
         let availableCategories = Object.keys(dataCache.scores || {});
         if (availableCategories.length === 0) availableCategories = ["Semester 1"];
@@ -1776,10 +1852,8 @@ document.addEventListener('DOMContentLoaded', function () {
         const getDisplayLabel = (key) => {
             const lang = localStorage.getItem('language') || 'km';
             const t = translations[lang] || {};
-
-            if (key === "Semester 1") return t.msg_semester + " " + formatNumber(1);
-            if (key === "Semester 2") return t.msg_semester + " " + formatNumber(2);
-
+            if (key === "Semester 1") return (t.msg_semester || 'Semester') + " " + formatNumber(1);
+            if (key === "Semester 2") return (t.msg_semester || 'Semester') + " " + formatNumber(2);
             const monthMap = {
                 "January": "month_01", "February": "month_02", "March": "month_03",
                 "April": "month_04", "May": "month_05", "June": "month_06",
@@ -1788,7 +1862,6 @@ document.addEventListener('DOMContentLoaded', function () {
             };
             const monthKey = monthMap[key];
             if (monthKey && t[monthKey]) return t[monthKey];
-
             return t[key] || key;
         };
 
@@ -1802,22 +1875,35 @@ document.addEventListener('DOMContentLoaded', function () {
             if (trigger) trigger.textContent = getDisplayLabel(selectedCategory);
         }
 
+        // ─── FILTER SCORES ────────────────────────────────────────────────────
         const scoresForCategory = dataCache.scores[selectedCategory] || [];
-        const filteredScores = scoresForCategory.filter(item => String(item.grade) === selectedGrade);
+        const filteredScores = scoresForCategory.filter(item => {
+            if (String(item.grade) !== selectedGrade) return false;
+            const courseLower = String(item.course || '').toLowerCase().trim();
+            if (METADATA_SKIP.includes(courseLower)) return false;
+            // Skip if score value is non-numeric and long (likely a student ID leaking through)
+            const scoreVal = String(item.totalScore || '').trim();
+            if (isNaN(parseFloat(scoreVal)) && scoreVal.length > 4) return false;
+            return true;
+        });
+
         const container = ui.scoresTableBody;
         container.innerHTML = '';
 
         const hasAnyData = dataCache.scores && Object.keys(dataCache.scores).length > 0;
 
+        // ─── EMPTY STATE ──────────────────────────────────────────────────────
         if (filteredScores.length === 0) {
             const txtNoResult = t.msg_no_result_data || "No results for Grade";
             if (!hasAnyData && !dataCache.isHeavyDataLoaded) {
                 renderLoadingSkeleton(container);
             } else {
                 container.innerHTML = `
-            <div class="empty-state-schedule">
-                <i class='bx bx-bar-chart-alt-2'></i>
-                <p>${txtNoResult} ${formatNumber(selectedGrade)} - ${getDisplayLabel(selectedCategory)}.</p>
+            <div class="empty-state-schedule" style="padding:3rem 1rem; text-align:center;">
+                <i class='bx bx-bar-chart-alt-2' style="font-size:3rem; color:var(--border-color);"></i>
+                <p style="margin-top:0.75rem; color:var(--secondary-text);">
+                    ${txtNoResult} ${formatNumber(selectedGrade)} - ${getDisplayLabel(selectedCategory)}.
+                </p>
             </div>`;
             }
             const cgpaEl = document.getElementById('cgpa-value');
@@ -1825,99 +1911,182 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
+        // ─── BUILD MODERN SUBJECT CARDS ───────────────────────────────────────
         let totalScore = 0;
         let count = 0;
 
-        const getGradeColor = (grade) => {
-            const g = (grade || '').toUpperCase();
-            if (g === 'A') return '#10B981';
-            if (g === 'B') return '#3B82F6';
-            if (g === 'C') return '#F59E0B';
-            if (g === 'D') return '#EF4444';
-            if (g === 'E' || g === 'F') return '#EF4444';
-            return '#8B5CF6';
-        };
+        let cardsHTML = `<div style="display:flex; flex-direction:column; gap:10px; margin-top:1rem; padding:0 2px;">`;
 
-        const getGradeBg = (grade) => {
-            const g = (grade || '').toUpperCase();
-            if (g === 'A') return '#ECFDF5';
-            if (g === 'B') return '#EFF6FF';
-            if (g === 'C') return '#FFFBEB';
-            if (g === 'D' || g === 'F') return '#FEF2F2';
-            return '#F3E8FF';
-        };
-
-        filteredScores.forEach((item, index) => {
-            const div = document.createElement('div');
-            div.className = 'modern-grade-item';
-            div.style.animation = `fadeInUp 0.4s ease forwards ${index * 0.05}s`;
-            div.style.opacity = '0';
-            div.style.cursor = 'pointer';
-
-            div.addEventListener('click', () => {
-                showResultDetail(item.course);
-            });
-
-            const score = parseFloat(item.totalScore) || 0;
-            const gradeLetter = item.gradeLabel || 'N/A';
+        filteredScores.forEach((item) => {
+            const score = parseFloat(item.totalScore);
+            const validScore = !isNaN(score);
+            const displayScore = validScore ? score : 0;
+            const gradeLetter = item.gradeLabel || '-';
             const color = getGradeColor(gradeLetter);
-            const bgColor = getGradeBg(gradeLetter);
-            const icon = getSubjectIcon(item.course);
+            const subjectIcon = getSubjectIcon(item.course);
+            const subjectColor = getSubjectColor(item.course);
+            const barWidth = Math.min((displayScore / 100) * 100, 100).toFixed(1);
 
-            div.innerHTML = `
-            <div class="grade-icon-box" style="background-color: ${bgColor}; color: ${color};">
-                <i class='${icon}'></i>
+            cardsHTML += `
+        <div style="
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 14px 16px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+            cursor: pointer;
+        "
+        onclick="showResultDetail('${item.course}')"
+        onmouseenter="this.style.transform='translateY(-2px)';this.style.boxShadow='0 6px 20px rgba(0,0,0,0.09)'"
+        onmouseleave="this.style.transform='translateY(0)';this.style.boxShadow='0 2px 8px rgba(0,0,0,0.04)'">
+
+            <!-- Subject Icon -->
+            <div style="
+                width:46px; height:46px; border-radius:13px; flex-shrink:0;
+                background:${subjectColor}1a;
+                display:flex; align-items:center; justify-content:center;
+            ">
+                <i class="${subjectIcon}" style="font-size:1.35rem; color:${subjectColor};"></i>
             </div>
-            <div class="grade-info">
-                <div class="grade-course-name">${item.course}</div>
-                <div class="grade-progress-track">
-                    <div class="grade-progress-fill" style="width: ${Math.min(score, 100)}%; background-color: ${color};"></div>
+
+            <!-- Subject Name + Score Bar -->
+            <div style="flex:1; min-width:0;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:7px;">
+                    <span style="
+                        font-weight:700; font-size:0.93rem;
+                        color:var(--primary-text);
+                        white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+                        max-width:62%;
+                    ">${item.course}</span>
+                    <span style="
+                        font-weight:800; font-size:0.88rem;
+                        color:${color};
+                        background:${color}18;
+                        padding:3px 11px; border-radius:20px;
+                        letter-spacing:0.3px;
+                    ">${gradeLetter}</span>
+                </div>
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <div style="flex:1; background:var(--border-color); border-radius:99px; height:6px; overflow:hidden;">
+                        <div style="
+                            width:${barWidth}%;
+                            height:100%;
+                            border-radius:99px;
+                            background: linear-gradient(90deg, ${color}99, ${color});
+                            transition: width 0.7s cubic-bezier(.4,0,.2,1);
+                        "></div>
+                    </div>
+                    <span style="font-size:0.88rem; font-weight:700; color:var(--secondary-text); flex-shrink:0; min-width:28px; text-align:right;">
+                        ${validScore ? formatNumber(displayScore) : '-'}
+                    </span>
                 </div>
             </div>
-            <div class="grade-score-box">
-                <span class="grade-letter-big" style="color: ${color}">${gradeLetter}</span>
-                <span class="grade-points-small">${formatNumber(score.toFixed(1))} pts</span>
-            </div>
-        `;
+        </div>`;
 
-            container.appendChild(div);
-
-            if (!isNaN(score)) {
+            if (validScore) {
                 totalScore += score;
                 count++;
             }
         });
 
-        if (count > 0) {
-            const totalText = t.result_total_avg || "Total Average";
-            const avg = (totalScore / count).toFixed(2);
+        cardsHTML += `</div>`;
 
-            const totalDiv = document.createElement('div');
-            totalDiv.className = 'modern-grade-item total-row';
-            totalDiv.style.marginTop = '0.5rem';
+        // ─── SUMMARY CARD: Total Score | Average | និទ្ទេស ─────────────────────
+        const avg = count > 0 ? (totalScore / count).toFixed(2) : 0;
 
-            totalDiv.innerHTML = `
-            <div class="grade-icon-box" style="background-color: rgba(255,255,255,0.2); color: white;">
-                <i class='bx bx-calculator'></i>
+        let totalGradeLetter = 'F';
+        if (avg >= 90) totalGradeLetter = 'A';
+        else if (avg >= 80) totalGradeLetter = 'B';
+        else if (avg >= 70) totalGradeLetter = 'C';
+        else if (avg >= 60) totalGradeLetter = 'D';
+        else if (avg >= 50) totalGradeLetter = 'E';
+
+        const avgColor = getGradeColor(totalGradeLetter);
+
+        cardsHTML += `
+    <div style="
+        margin-top: 16px;
+        border-radius: 18px;
+        overflow: hidden;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.07);
+        border: 1px solid var(--border-color);
+    ">
+        <!-- Header bar -->
+        <div style="
+            background: linear-gradient(135deg, var(--primary-color) 0%, #a78bfa 100%);
+            padding: 10px 20px;
+            text-align: center;
+            font-size: 0.78rem;
+            font-weight: 600;
+            letter-spacing: 0.8px;
+        ">សង្ខេបលទ្ធផល · SUMMARY</div>
+
+        <!-- Three stat columns -->
+        <div style="
+            display: grid;
+            grid-template-columns: 1fr 1px 1fr 1px 1fr;
+            background: var(--card-bg);
+        ">
+            <!-- Total Score -->
+            <div style="padding: 18px 12px; text-align: center;">
+                <div style="font-size:0.72rem; color:var(--secondary-text); margin-bottom:6px; letter-spacing:0.4px;">
+                    ពិន្ទុសរុប<br><span style="opacity:0.7;">Total Score</span>
+                </div>
+                <div style="font-size:1.75rem; font-weight:800; color:var(--primary-color); line-height:1;">
+                    ${formatNumber(Math.round(totalScore))}
+                </div>
             </div>
-            <div class="grade-info">
-                <div class="grade-course-name">${totalText}</div>
-            </div>
-            <div class="grade-score-box">
-                <span class="grade-letter-big" style="color: white;">${formatNumber(avg)}</span>
-            </div>
-        `;
-            container.appendChild(totalDiv);
 
-            const cgpaEl = document.getElementById('cgpa-value');
-            if (cgpaEl) cgpaEl.textContent = formatNumber(avg);
+            <!-- Divider -->
+            <div style="background: var(--border-color);"></div>
 
-            const circle = document.querySelector('.circle');
-            if (circle) circle.setAttribute('stroke-dasharray', `${avg}, 100`);
-        }
+            <!-- Average -->
+            <div style="padding: 18px 12px; text-align: center;">
+                <div style="font-size:0.72rem; color:var(--secondary-text); margin-bottom:6px; letter-spacing:0.4px;">
+                    មធ្យមភាគ<br><span style="opacity:0.7;">Average</span>
+                </div>
+                <div style="font-size:1.75rem; font-weight:800; color:var(--primary-color); line-height:1;">
+                    ${formatNumber(avg)}
+                </div>
+            </div>
+
+            <!-- Divider -->
+            <div style="background: var(--border-color);"></div>
+
+            <!-- និទ្ទេស / Grade -->
+            <div style="padding: 18px 12px; text-align: center;">
+                <div style="font-size:0.72rem; color:var(--secondary-text); margin-bottom:6px; letter-spacing:0.4px;">
+                    និទ្ទេស<br><span style="opacity:0.7;">Grade</span>
+                </div>
+                <div style="
+                    display:inline-flex; align-items:center; justify-content:center;
+                    width:42px; height:42px; border-radius:50%;
+                    background:${avgColor}18;
+                    border:2px solid ${avgColor};
+                    font-size:1.25rem; font-weight:800;
+                    color:${avgColor};
+                    line-height:1;
+                ">${totalGradeLetter}</div>
+            </div>
+        </div>
+    </div>`;
+
+        // ─── RENDER ───────────────────────────────────────────────────────────
+        container.innerHTML = cardsHTML;
+
+        // ─── UPDATE GPA CIRCLE AT TOP ─────────────────────────────────────────
+        const cgpaEl = document.getElementById('cgpa-value');
+        if (cgpaEl) cgpaEl.textContent = formatNumber(avg);
+
+        const circle = document.querySelector('.circle');
+        if (circle) circle.setAttribute('stroke-dasharray', `${avg}, 100`);
     }
 
-    // --- Replace renderAttendance in script.js ---
+    // --- ជំនួស Function renderAttendance ចាស់ទាំងស្រុង ដោយកូដនេះ ---
     function renderAttendance() {
         const allowedSemesters = ['1', '2'];
         let selectedSem = ui.semesterFilterAttendance.dataset.value;
@@ -2000,75 +2169,57 @@ document.addEventListener('DOMContentLoaded', function () {
 
         if (!dataCache.isHeavyDataLoaded) {
             renderLoadingSkeleton(ui.attendanceListContainer, 3);
-            document.getElementById('overall-attendance-percent').textContent = '--%';
-            document.getElementById('total-present').textContent = '--';
-            document.getElementById('total-absent').textContent = '--';
-            document.getElementById('total-permission').textContent = '--';
+            const overallPercentEl = document.getElementById('overall-attendance-percent');
+            const presentEl = document.getElementById('total-present');
+            const absentEl = document.getElementById('total-absent');
+            const permEl = document.getElementById('total-permission');
+
+            if (overallPercentEl) overallPercentEl.textContent = '--%';
+            if (presentEl) presentEl.textContent = '--';
+            if (absentEl) absentEl.textContent = '--';
+            if (permEl) permEl.textContent = '--';
             return;
         }
 
+        // 1. ទាញយកទិន្នន័យតាមឆមាស និងថ្នាក់
         const attendanceInSemester = dataCache.attendance ? (dataCache.attendance[selectedSem] || []) : [];
-        const filteredAttendance = attendanceInSemester.filter(record => {
+        const gradeFilteredAttendance = attendanceInSemester.filter(record => {
             if (!record.grade || record.grade === "") return true;
             return String(record.grade) === String(selectedGrade);
         });
 
-        if (filteredAttendance.length === 0) {
-            document.getElementById('overall-attendance-percent').textContent = '--%';
-            document.getElementById('total-present').textContent = formatNumber('0');
-            document.getElementById('total-absent').textContent = formatNumber('0');
-            document.getElementById('total-permission').textContent = formatNumber('0');
+        // ==========================================
+        // 2. គណនាទិន្នន័យសម្រាប់ OVERALL SUMMARY
+        // ==========================================
+        let totalPresent = 0;
+        let totalAbsent = 0;
+        let totalPermission = 0;
 
-            const summaryChart = document.querySelector('.summary-chart');
-            if (summaryChart) summaryChart.style.backgroundImage = '';
-
-            const txtNoRecord = t.msg_no_records_grade || 'No records found for Grade';
-            const txtSem = t.msg_semester || 'Semester';
-
-            ui.attendanceListContainer.innerHTML = `
-        <div class="card">
-            <p>${txtNoRecord} ${formatNumber(selectedGrade)}, ${txtSem} ${formatNumber(selectedSem)}.</p>
-        </div>`;
-            return;
-        }
-
-        const groupedByCourse = filteredAttendance.reduce((acc, record) => {
-            const course = record.course || 'Unknown';
-            if (!acc[course]) {
-                acc[course] = { 'Present': 0, 'Absent': 0, 'Permission': 0, 'Total': 0 };
+        gradeFilteredAttendance.forEach(record => {
+            const status = (record.status || '').toLowerCase().trim();
+            if (status.includes('present') || status.includes('វត្តមាន') || status === 'p') {
+                totalPresent++;
+            } else if (status.includes('absent') || status.includes('អវត្តមាន') || status === 'a') {
+                totalAbsent++;
+            } else if (status.includes('permission') || status.includes('ច្បាប់')) {
+                totalPermission++;
             }
-
-            const rawStatus = (record.status || '').toString().toLowerCase().trim();
-            let statusKey = null;
-
-            if (rawStatus.includes('present') || rawStatus.includes('វត្តមាន') || rawStatus === 'p') {
-                statusKey = 'Present';
-            } else if (rawStatus.includes('absent') || rawStatus.includes('អវត្តមាន') || rawStatus === 'a') {
-                statusKey = 'Absent';
-            } else if (rawStatus.includes('permission') || rawStatus.includes('ច្បាប់')) {
-                statusKey = 'Permission';
-            }
-
-            if (statusKey) acc[course][statusKey]++;
-            acc[course]['Total']++;
-            return acc;
-        }, {});
-
-        let totalPresent = 0, totalAbsent = 0, totalPermission = 0, grandTotal = 0;
-        Object.values(groupedByCourse).forEach(counts => {
-            totalPresent += counts.Present;
-            totalAbsent += counts.Absent;
-            totalPermission += counts.Permission;
-            grandTotal += counts.Total;
         });
 
+        const grandTotal = totalPresent + totalAbsent + totalPermission;
         const overallPercent = grandTotal > 0 ? Math.round((totalPresent / grandTotal) * 100) : 100;
 
+        // បង្ហាញកាត Summary ឡើងវិញ (លុបចោល display: none ប្រសិនបើមាន)
+        const summaryCard = document.querySelector('.attendance-overall-summary');
+        if (summaryCard) summaryCard.style.display = 'flex';
+
+        // បញ្ចូលលេខទៅក្នុង HTML
         document.getElementById('overall-attendance-percent').textContent = `${isNaN(overallPercent) ? '--' : formatNumber(overallPercent)}%`;
         document.getElementById('total-present').textContent = formatNumber(totalPresent);
         document.getElementById('total-absent').textContent = formatNumber(totalAbsent);
         document.getElementById('total-permission').textContent = formatNumber(totalPermission);
 
+        // គូរពណ៌រង្វង់ Chart
         const absentDeg = grandTotal > 0 ? (totalAbsent / grandTotal) * 360 : 0;
         const permDeg = grandTotal > 0 ? (totalPermission / grandTotal) * 360 : 0;
 
@@ -2084,38 +2235,142 @@ document.addEventListener('DOMContentLoaded', function () {
         )`;
         }
 
-        const attendanceSummary = Object.entries(groupedByCourse).map(([course, counts]) => ({ course, ...counts }));
+        // ==========================================
+        // 3. ច្រោះយកតែ Absent និង Permission សម្រាប់បញ្ជី History ខាងក្រោម
+        // ==========================================
+        const historyList = gradeFilteredAttendance.filter(record => {
+            const status = (record.status || '').toLowerCase();
+            return status.includes('absent') || status.includes('អវត្តមាន') || status === 'a' || status.includes('permission') || status.includes('ច្បាប់');
+        });
 
-        renderList(ui.attendanceListContainer, attendanceSummary, (item) => {
+        // តម្រៀបកាលបរិច្ឆេទពីថ្មីទៅចាស់
+        historyList.sort((a, b) => {
+            return new Date(b.date || b.timestamp) - new Date(a.date || a.timestamp);
+        });
+
+        if (historyList.length === 0) {
+            const txtNoRecord = t.msg_no_records_grade || 'មិនមានប្រវត្តិអវត្តមាន ឬសុំច្បាប់ទេ សម្រាប់ថ្នាក់ទី';
+            const txtSem = t.msg_semester || 'ឆមាសទី';
+
+            ui.attendanceListContainer.innerHTML = `
+        <div class="card" style="text-align: center; padding: 2rem 1rem;">
+            <i class='bx bx-calendar-check' style="font-size: 3rem; color: var(--status-approved-text); margin-bottom: 1rem;"></i>
+            <p style="color: var(--secondary-text);">${txtNoRecord} ${formatNumber(selectedGrade)}, ${txtSem} ${formatNumber(selectedSem)} 🎉</p>
+        </div>`;
+            return;
+        }
+
+        // បង្ហាញបញ្ជីជា Card
+        renderList(ui.attendanceListContainer, historyList, (item) => {
             const div = document.createElement('div');
-            div.className = 'card attendance-course-card';
+            div.className = 'history-card';
+            div.style.cssText = `
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid var(--border-color);
+            transition: transform 0.2s;
+        `;
 
-            const totalSessions = item.Total || 0;
-            const itemRelevantSessions = Math.max(0, totalSessions - item.Permission);
-            const coursePercent = itemRelevantSessions > 0 ? Math.round((item.Present / itemRelevantSessions) * 100) : (totalSessions > 0 ? 0 : 100);
+            // 1. ស្វែងរក STATUS 
+            const keys = Object.keys(item);
+            const statusKey = keys.find(k => k.toLowerCase().trim() === 'status' || k.toLowerCase().trim() === 'ស្ថានភាព');
+            const statusRaw = (statusKey ? item[statusKey] : '').toLowerCase();
+            let isAbsent = statusRaw.includes('absent') || statusRaw.includes('អវត្តមាន') || statusRaw === 'a';
 
-            const presentBar = totalSessions > 0 ? (item.Present / totalSessions) * 100 : 0;
-            const absentBar = totalSessions > 0 ? (item.Absent / totalSessions) * 100 : 0;
-            const permissionBar = totalSessions > 0 ? (item.Permission / totalSessions) * 100 : 0;
+            let statusBg = isAbsent ? 'rgba(239, 68, 68, 0.1)' : 'rgba(245, 158, 11, 0.1)';
+            let statusColor = isAbsent ? '#EF4444' : '#F59E0B';
+            let statusText = isAbsent ? (t.attendance_absent_label || 'អវត្តមាន') : (t.attendance_permission_label || 'សុំច្បាប់');
+            let icon = isAbsent ? 'bx-user-x' : 'bx-message-square-edit';
 
+            // 2. ស្វែងរកកាលបរិច្ឆេទ (DATE) រួចបកប្រែជាខ្មែរ
+            const dateKey = keys.find(k => ['date', 'កាលបរិច្ឆេទ', 'ថ្ងៃខែ', 'requestdate'].includes(k.toLowerCase().trim()));
+            const rawDate = dateKey ? item[dateKey] : null;
+            let dateStr = t.msg_unknown_date || (lang === 'km' ? 'មិនស្គាល់កាលបរិច្ឆេទ' : 'Unknown Date');
+
+            if (rawDate) {
+                const dateObj = new Date(rawDate);
+                if (!isNaN(dateObj.getTime())) {
+                    if (lang === 'km') {
+                        const kmDays = ['អាទិត្យ', 'ចន្ទ', 'អង្គារ', 'ពុធ', 'ព្រហស្បតិ៍', 'សុក្រ', 'សៅរ៍'];
+                        const kmMonths = ['មករា', 'កុម្ភៈ', 'មីនា', 'មេសា', 'ឧសភា', 'មិថុនា', 'កក្កដា', 'សីហា', 'កញ្ញា', 'តុលា', 'វិច្ឆិកា', 'ធ្នូ'];
+
+                        const dName = kmDays[dateObj.getDay()];
+                        const dNum = formatNumber(dateObj.getDate());
+                        const mName = kmMonths[dateObj.getMonth()];
+                        const yNum = formatNumber(dateObj.getFullYear());
+
+                        dateStr = `${dName}, ${dNum} ${mName} ${yNum}`;
+                    } else {
+                        dateStr = dateObj.toLocaleDateString('en-GB', {
+                            weekday: 'short', day: 'numeric', month: 'short', year: 'numeric'
+                        });
+                    }
+                } else {
+                    dateStr = rawDate;
+                }
+            }
+
+            // ==========================================================
+            // 3. ចាប់យក "មូលហេតុ" ពី Column D (header: "reason") តែមួយគត់
+            // ==========================================================
+            let rawReason = '';
+            const reasonKey = keys.find(k => k.toLowerCase().trim() === 'reason'); // ស្វែងរកតែពាក្យ reason ប៉ុណ្ណោះ
+
+            if (reasonKey && item[reasonKey]) {
+                rawReason = item[reasonKey].toString().trim();
+            }
+
+            const defaultReason = t.msg_no_reason || (lang === 'km' ? 'មិនមានបញ្ជាក់មូលហេតុទេ' : 'No reason provided');
+            const reasonText = rawReason !== '' ? rawReason : defaultReason;
+
+            // 4. គូរកាតបង្ហាញលើអេក្រង់
             div.innerHTML = `
-        <div class="attendance-course-card-header">
-            <h3>${item.course}</h3>
-            <span class="attendance-course-card-percent">${isNaN(coursePercent) ? '--' : formatNumber(coursePercent)}%</span>
-        </div>
-        <div class="progress-bar">
-            <div class="progress-bar-fill present" style="width: ${presentBar}%"></div>
-            <div class="progress-bar-fill absent" style="width: ${absentBar}%"></div>
-            <div class="progress-bar-fill permission" style="width: ${permissionBar}%"></div>
-        </div>
-        <div class="attendance-course-card-details">
-            <span>${t.attendance_present_label || 'Present'}: <b>${formatNumber(item.Present)}</b></span>
-            <span>${t.attendance_absent_label || 'Absent'}: <b>${formatNumber(item.Absent)}</b></span>
-            <span>${t.attendance_permission_label || 'Permission'}: <b>${formatNumber(item.Permission)}</b></span>
-        </div>
-    `;
+            <div style="display: flex; align-items: flex-start; gap: 12px; flex: 1; min-width: 0;">
+                <div style="
+                    width: 40px; 
+                    height: 40px; 
+                    border-radius: 50%; 
+                    background: ${statusBg}; 
+                    color: ${statusColor}; 
+                    display: flex; 
+                    align-items: center; 
+                    justify-content: center; 
+                    font-size: 1.2rem; 
+                    flex-shrink: 0;
+                ">
+                    <i class='bx ${icon}'></i>
+                </div>
+                <div style="flex: 1; min-width: 0;">
+                    <div style="font-weight: 600; color: var(--primary-text); margin-bottom: 4px; font-size: 1rem;">
+                        ${dateStr}
+                    </div>
+                    <div style="color: var(--secondary-text); font-size: 0.85rem; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                        <i class='bx bx-message-detail' style="margin-right: 4px;"></i>${reasonText}
+                    </div>
+                </div>
+            </div>
+            <div style="margin-left: 12px; flex-shrink: 0;">
+                <span style="
+                    background-color: ${statusBg}; 
+                    color: ${statusColor}; 
+                    padding: 6px 12px; 
+                    border-radius: 20px; 
+                    font-size: 0.75rem; 
+                    font-weight: 700;
+                    display: inline-block;
+                ">
+                    ${statusText}
+                </span>
+            </div>
+        `;
             return div;
-        }, `<div class="card"><p>No records found.</p></div>`);
+        }, `<div class="card"><p>${t.msg_no_data || (lang === 'km' ? 'មិនមានទិន្នន័យ។' : 'No data available.')}</p></div>`);
     }
 
     function updateGpaAndCredits() {
@@ -2138,7 +2393,7 @@ document.addEventListener('DOMContentLoaded', function () {
         updateGpaAndCredits();
 
         // Destructure keys matching Google Sheet headers: 'grade' and 'yearStudent'
-        const { englishName, studentId, profileImgUrl, grade, yearStudent } = dataCache.profile;
+        const { englishName, khmerName, studentId, profileImgUrl, grade, yearStudent } = dataCache.profile;
 
         // Use calculated GPA from results or fallback
         const cgpaEl = document.getElementById('cgpa-value');
@@ -2151,38 +2406,26 @@ document.addEventListener('DOMContentLoaded', function () {
             const tempImg = new Image();
             const finalImgSrc = profileImgUrl || `https://placehold.co/128x128/eeeeee/333333?text=${englishName?.[0] || '?'}`;
 
-            tempImg.onload = () => {
-                const existingContent = profileCard.querySelector('.profile-card-content');
-                if (existingContent) {
-                    existingContent.remove();
-                }
+            // Render immediately — no waiting for image onload
+            const existingContent = profileCard.querySelector('.profile-card-content');
+            if (existingContent) existingContent.remove();
+            if (skeletonLoader) skeletonLoader.style.display = 'none';
 
-                const contentHTML = `
-                <div class="profile-card-content">
-                    <img id="profile-img-view" class="profile-img-lg"
-                        src="${finalImgSrc}"
-                        alt="Student profile picture">
-                    <h2 id="profile-englishName-view" class="profile-name">${englishName || 'N/A'}</h2>
-                    <p id="profile-id-view" class="profile-id">${studentId || 'N/A'}</p>
-                </div>
-            `;
+            profileCard.insertAdjacentHTML('beforeend', `
+    <div class="profile-card-content">
+        <img id="profile-img-view" class="profile-img-lg"
+            src="${finalImgSrc}"
+            alt="Student profile picture"
+            onerror="this.onerror=null;this.src='https://placehold.co/128x128/eeeeee/333333?text=${englishName?.[0] || '?'}'">
+        <h2 id="profile-englishName-view" class="profile-name">${dataCache.profile?.khmerName || dataCache.profile?.englishName || 'N/A'}</h2>
+        <p id="profile-id-view" class="profile-id">${studentId || 'N/A'}</p>
+    </div>
+`);
 
-                if (skeletonLoader) {
-                    skeletonLoader.style.display = 'none';
-                }
-                profileCard.insertAdjacentHTML('beforeend', contentHTML);
-
+            setTimeout(() => {
                 const content = profileCard.querySelector('.profile-card-content');
-                setTimeout(() => {
-                    if (content) content.classList.add('loaded');
-                }, 10);
-            };
-
-            tempImg.onerror = () => {
-                tempImg.src = `https://placehold.co/128x128/eeeeee/333333?text=${englishName?.[0] || '?'}`;
-            };
-
-            tempImg.src = finalImgSrc;
+                if (content) content.classList.add('loaded');
+            }, 10);
         }
 
         // --- UPDATE PROFILE STATS ---
@@ -2485,15 +2728,16 @@ document.addEventListener('DOMContentLoaded', function () {
             const response = await fetch(`${SCRIPT_URL}?action=getLatestPermissionRequest&token=${token}`);
             const result = await response.json();
 
-            // 5. DECIDE DISPLAY MODE (Case-insensitive check for 'Pending')
-            const isPending = result.success && result.data && (result.data.Status || '').toLowerCase() === 'pending';
+            // 5. DECIDE DISPLAY MODE
+            // ឆែកមើលថាមានទិន្នន័យច្បាប់ចុងក្រោយឬអត់ (មិនថា Pending, Approved, ឬ Rejected)
+            const hasRecentRequest = result.success && result.data && result.data.Status;
 
-            if (isPending) {
-                // FOUND PENDING -> SWITCH CONTENT TO OVERLAY
+            if (hasRecentRequest) {
+                // បើមានទិន្នន័យចាស់ -> បង្ហាញកាត Overlay ជានិច្ច
                 dataCache.latestPermissionRequest = result.data;
                 updatePermissionRequestPageContent('overlay');
             } else {
-                // APPROVED / REJECTED / NO DATA -> SWITCH CONTENT TO FORM
+                // បើគ្មានទិន្នន័យ -> បង្ហាញ Form ឱ្យសុំច្បាប់ថ្មី
                 dataCache.latestPermissionRequest = null;
                 updatePermissionRequestPageContent('form');
             }
@@ -2505,7 +2749,6 @@ document.addEventListener('DOMContentLoaded', function () {
             btn.disabled = false;
         }
     }
-
 
     function updatePermissionRequestPageContent(mode) {
         const skeleton = document.getElementById('permission-form-skeleton');
@@ -3119,17 +3362,32 @@ document.addEventListener('DOMContentLoaded', function () {
     async function handleProfileImageUpload(e) {
         const file = e.target.files[0];
         if (!file) return;
+
+        const lang = localStorage.getItem('language') || 'km';
+        const t = translations[lang] || {};
+
         if (!file.type.startsWith('image/')) {
-            return alert('Please select an image file.');
+            showToast(t.toast_invalid_image || 'Please select an image file.', 'error');
+            return;
         }
         const MAX_SIZE_MB = 5;
         if (file.size > MAX_SIZE_MB * 1024 * 1024) {
-            return alert(`File is too large. Max size is ${MAX_SIZE_MB}MB.`);
+            showToast(`File is too large. Max ${MAX_SIZE_MB}MB.`, 'error');
+            return;
         }
+
         const imageContainer = document.querySelector('.profile-image-changer');
+        const myProfileImg = document.getElementById('my-profile-img');
+
+        // ✅ Show instant local preview before upload starts
+        const previewUrl = URL.createObjectURL(file);
+        if (myProfileImg) myProfileImg.src = previewUrl;
+
         imageContainer.classList.add('uploading');
+
         const reader = new FileReader();
         reader.readAsDataURL(file);
+
         reader.onloadend = async () => {
             try {
                 const base64Data = reader.result.split(',')[1];
@@ -3139,39 +3397,66 @@ document.addEventListener('DOMContentLoaded', function () {
                     mimeType: file.type,
                     fileData: base64Data
                 };
+
                 const res = await fetch(SCRIPT_URL, {
                     method: 'POST',
                     body: JSON.stringify({ action: 'uploadImage', payload }),
                     headers: { 'Content-Type': 'text/plain;charset=utf-8' }
                 });
                 const result = await res.json();
+
                 if (result.success && result.newImageUrl) {
-                    alert('Profile image updated!');
                     const newUrl = result.newImageUrl + '&t=' + new Date().getTime();
-                    document.getElementById('profile-img-view').src = newUrl;
-                    document.getElementById('my-profile-img').src = newUrl;
-                    if (dataCache.profile) {
-                        dataCache.profile.profileImgUrl = newUrl;
-                    }
+
+                    // ✅ Update all images on the page
+                    const profileImgView = document.getElementById('profile-img-view');
+                    if (profileImgView) profileImgView.src = newUrl;
+                    if (myProfileImg) myProfileImg.src = newUrl;
+
+                    // ✅ Update id-card photo if visible
+                    const idCardPhoto = document.getElementById('id-card-photo');
+                    if (idCardPhoto) idCardPhoto.src = newUrl;
+
+                    // ✅ Update cache
+                    if (dataCache.profile) dataCache.profile.profileImgUrl = newUrl;
+
+                    // ✅ Update localStorage so next refresh keeps the new photo
+                    try {
+                        const cached = JSON.parse(localStorage.getItem('studentProfile') || '{}');
+                        cached.profileImgUrl = newUrl;
+                        localStorage.setItem('studentProfile', JSON.stringify(cached));
+                    } catch (_) { }
+
+                    // ✅ Nice toast instead of alert
+                    showTopNotification(t.notif_photo_updated || 'Profile photo updated!');
+
+                    // Revoke object URL to free memory
+                    URL.revokeObjectURL(previewUrl);
+
                 } else {
                     throw new Error(result.message || 'Upload failed.');
                 }
             } catch (error) {
-                alert(error.message);
+                // ✅ Restore old image on error
+                if (dataCache.profile?.profileImgUrl && myProfileImg) {
+                    myProfileImg.src = dataCache.profile.profileImgUrl;
+                }
+                showToast(error.message, 'error');
             } finally {
                 imageContainer.classList.remove('uploading');
                 e.target.value = '';
             }
         };
+
         reader.onerror = () => {
-            alert('Failed to read file.');
+            showToast('Failed to read file.', 'error');
             imageContainer.classList.remove('uploading');
+            URL.revokeObjectURL(previewUrl);
         };
     }
 
     // --- PERMISSION OVERLAY LOGIC ---
     async function checkExistingPermissionRequest() {
-        const overlay = document.getElementById('permission-overlay');
         const token = localStorage.getItem('token');
         const skeleton = document.getElementById('permission-form-skeleton');
 
@@ -3183,23 +3468,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
             if (result.success && result.data) {
                 dataCache.latestPermissionRequest = result.data;
-                const req = result.data;
-
-                if (req.Status === 'Pending') {
-                    // Pending -> Show Invoice Overlay (on top of whatever view is active)
-                    // Hide form container sub-page if it was attempting to show
-                    ui.permissionRequestView.classList.add('hidden');
-                    ui.attendanceMainView.classList.remove('hidden');
-                    renderPermissionOverlay();
+                if (result.data.Status) {
+                    updatePermissionRequestPageContent('overlay');
                 } else {
-                    // Approved/Rejected -> Ensure overlay is hidden
-                    overlay.classList.remove('show');
-                    overlay.classList.add('hidden');
+                    updatePermissionRequestPageContent('form');
                 }
             } else {
                 dataCache.latestPermissionRequest = null;
-                overlay.classList.remove('show');
-                overlay.classList.add('hidden');
+                updatePermissionRequestPageContent('form');
             }
 
         } catch (error) {
@@ -3251,6 +3527,13 @@ document.addEventListener('DOMContentLoaded', function () {
         const lang = localStorage.getItem('language') || 'km';
         const t = translations[lang] || {};
 
+        // -- ចាប់ផ្ដើមកូដដែលត្រូវថែមថ្មី (ប្ដូរពណ៌បន្ទាត់ខាងឆ្វេង) --
+        const detailsContainer = overlay.querySelector('.overlay-details-container');
+        if (detailsContainer) {
+            const statusClass = (request.Status || '').toLowerCase();
+            detailsContainer.className = `overlay-details-container status-${statusClass}`;
+        }
+
         // 1. Populate Profile Image
         const imgElement = document.getElementById('overlay-profile-img');
         if (imgElement) {
@@ -3262,7 +3545,7 @@ document.addEventListener('DOMContentLoaded', function () {
         detailsList.innerHTML = '';
 
         const details = {
-            [t.perm_label_name || 'Name']: profile.englishName,
+            [t.perm_label_name || 'Name']: profile.khmerName || profile.englishName, // យកឈ្មោះខ្មែរមុន បើអត់មានទើបយកឈ្មោះអង់គ្លេស
             [t.perm_label_grade || 'Class']: profile.grade,
             [t.perm_label_request_date || 'Request Date']: new Date(request.RequestDate || request.requestDate).toLocaleDateString('en-GB'),
             [t.perm_label_leave_type || 'Leave Type']: request.StatusType || request.statusType,

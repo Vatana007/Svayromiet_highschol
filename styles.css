@@ -180,7 +180,7 @@ body.is-processing .main-content {
 
 /* Ensure the toast notification can still animate in if needed */
 body.is-processing .toast-notification {
-    pointer-events: none; 
+    pointer-events: none;
 }
 
 
@@ -339,6 +339,7 @@ html[lang="en"] .lang-km {
     overflow-y: auto;
     padding: 0 1rem 1rem;
     padding-bottom: calc(90px + 1rem);
+    transition: transform 0.3s ease-out;
 }
 
 .content-section {
@@ -457,8 +458,10 @@ html[lang="en"] .lang-km {
 }
 
 .skeleton-class-card {
-    flex: 0 0 240px; /* Matches the exact width of the real class card */
-    height: 110px;   /* Matches the approximate height of the real card */
+    flex: 0 0 240px;
+    /* Matches the exact width of the real class card */
+    height: 110px;
+    /* Matches the approximate height of the real card */
     border-radius: 1rem;
     background-color: var(--skeleton-bg);
     position: relative;
@@ -1190,8 +1193,7 @@ html[lang="en"] .lang-km {
 
 .profile-image-changer {
     position: relative;
-    width: fit-content;
-    margin: 0 auto;
+    display: inline-block;
 }
 
 .camera-icon {
@@ -1454,14 +1456,35 @@ html[lang="en"] .lang-km {
     border-radius: 100%;
 }
 
+.profile-image-changer .upload-spinner {
+    display: none;
+}
+
 .profile-image-changer.uploading .upload-spinner {
-    opacity: 1;
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    animation: spin 1s linear infinite;
 }
 
 .upload-spinner .path {
     stroke: var(--accent-color);
     stroke-linecap: round;
     animation: dash 1.5s ease-in-out infinite;
+}
+
+.profile-image-changer.uploading .camera-icon {
+    opacity: 0.3;
+    pointer-events: none;
+}
+
+@keyframes spin {
+    100% {
+        transform: rotate(360deg);
+    }
 }
 
 @keyframes rotate {
@@ -1933,8 +1956,21 @@ input:checked+.slider:before {
 }
 
 .overlay-details-container {
-    border-left: 3px solid var(--status-approved-text);
+    border-left: 3px solid transparent; /* លុបពណ៌ចាស់ចោល */
     padding-left: 1rem;
+    transition: border-color 0.3s ease; /* ដាក់ឲ្យមានចលនាប្ដូរពណ៌រលូន */
+}
+
+/* បន្ថែមពណ៌តាមស្ថានភាពនីមួយៗនៅខាងក្រោមនេះ */
+.overlay-details-container.status-pending {
+    border-left-color: var(--status-pending-text); /* ពណ៌ទឹកក្រូចសម្រាប់រង់ចាំ (Pending) */
+}
+.overlay-details-container.status-approved {
+    border-left-color: var(--status-approved-text); /* ពណ៌បៃតងសម្រាប់អនុម័ត (Approved) */
+}
+.overlay-details-container.status-rejected,
+.overlay-details-container.status-denied {
+    border-left-color: var(--status-denied-text); /* ពណ៌ក្រហមសម្រាប់បដិសេធ (Rejected) */
 }
 
 .overlay-details-container .details-list {
@@ -2262,24 +2298,16 @@ input:checked+.slider:before {
     cursor: pointer;
 }
 
-/* --- PULL TO REFRESH STYLES --- */
-.main-content {
-    /* Add transition for smooth snap-back animations */
-    transition: transform 0.3s ease-out;
-}
-
 #pull-to-refresh-indicator {
     position: absolute;
     top: 0;
     left: 0;
     right: 0;
-    height: 50px;
-    /* Height of the loading area */
+    height: 60px; /* កម្ពស់កន្លែងរង្វង់វិល */
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 0;
-    /* Changed from -1 to ensure visibility */
+    z-index: 1; /* ធានាថាវានៅខាងក្រោយ Header បន្តិច */
     opacity: 0;
     transition: opacity 0.3s ease-out;
 }
@@ -2295,9 +2323,14 @@ input:checked+.slider:before {
     transition: opacity 0.3s ease, transform 0.3s ease;
 }
 
-/* This class will be toggled by JS to control the continuous spinning */
 #pull-to-refresh-indicator .spinner.is-refreshing {
-    animation: spin 1s linear infinite;
+    animation: ptrSpin 1s linear infinite;
+    transition: none; 
+}
+
+@keyframes ptrSpin {
+    0% { transform: scale(1) rotate(0deg); }
+    100% { transform: scale(1) rotate(360deg); }
 }
 
 /* Styles for the schedule view containers */
@@ -3643,9 +3676,20 @@ input:checked+.slider:before {
     height: 14px;
     border-radius: 4px;
 }
-.skeleton-text.title { width: 60%; height: 18px; margin-bottom: 4px; }
-.skeleton-text.desc { width: 100%; }
-.skeleton-text.desc-short { width: 75%; }
+
+.skeleton-text.title {
+    width: 60%;
+    height: 18px;
+    margin-bottom: 4px;
+}
+
+.skeleton-text.desc {
+    width: 100%;
+}
+
+.skeleton-text.desc-short {
+    width: 75%;
+}
 
 /* News & Events Skeleton */
 .skeleton-news-item {
@@ -3655,11 +3699,13 @@ input:checked+.slider:before {
     border-bottom: 1px solid var(--border-color);
     margin-bottom: 1rem;
 }
+
 .skeleton-news-date {
     width: 45px;
     height: 55px;
     border-radius: 0.5rem;
 }
+
 .skeleton-news-content {
     flex: 1;
     display: flex;
@@ -3679,13 +3725,18 @@ input:checked+.slider:before {
     border: 1px solid var(--border-color);
     margin-bottom: 0.75rem;
 }
+
 .skeleton-grade-icon {
     width: 45px;
     height: 45px;
     border-radius: 12px;
     flex-shrink: 0;
 }
-.skeleton-grade-info { flex-grow: 1; }
+
+.skeleton-grade-info {
+    flex-grow: 1;
+}
+
 .skeleton-grade-score {
     width: 30px;
     height: 35px;
@@ -3710,6 +3761,7 @@ input:checked+.slider:before {
     padding-left: 2rem;
     margin-bottom: 1.5rem;
 }
+
 .skeleton-timeline-block::before {
     content: '';
     position: absolute;
@@ -3719,6 +3771,7 @@ input:checked+.slider:before {
     width: 2px;
     background-color: var(--border-color);
 }
+
 .skeleton-timeline-dot {
     position: absolute;
     left: 0;
@@ -3730,6 +3783,7 @@ input:checked+.slider:before {
     border: 3px solid var(--skeleton-bg);
     z-index: 2;
 }
+
 .skeleton-timeline-card {
     background-color: var(--secondary-bg);
     border-radius: 16px;
@@ -3739,6 +3793,7 @@ input:checked+.slider:before {
     flex-direction: column;
     gap: 0.75rem;
 }
+
 .skeleton-time-pill {
     width: 110px;
     height: 26px;
@@ -3755,7 +3810,8 @@ input:checked+.slider:before {
 }
 
 [data-theme-mode='dark'] .swipe-container {
-    background-color: #3f1616; /* Dark mode red background */
+    background-color: #3f1616;
+    /* Dark mode red background */
 }
 
 .swipe-action-delete {
@@ -3768,7 +3824,8 @@ input:checked+.slider:before {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    color: #ef4444; /* Red icon */
+    color: #ef4444;
+    /* Red icon */
     font-size: 1.5rem;
     cursor: pointer;
     z-index: 1;
@@ -3791,15 +3848,18 @@ input:checked+.slider:before {
     /* Prevent text selection while swiping */
     user-select: none;
     -webkit-user-select: none;
-    touch-action: pan-y; /* Allow vertical scroll, hijack horizontal */
+    touch-action: pan-y;
+    /* Allow vertical scroll, hijack horizontal */
 }
 
 .swipe-card.is-swiping {
-    transition: none; /* Disable transition during finger drag for instant response */
+    transition: none;
+    /* Disable transition during finger drag for instant response */
 }
 
 .swipe-card.swiped-open {
-    transform: translateX(-80px); /* Lock open to show the 80px delete button */
+    transform: translateX(-80px);
+    /* Lock open to show the 80px delete button */
 }
 
 .swipe-container.removing {
@@ -3820,4 +3880,29 @@ input:checked+.slider:before {
         opacity: 0;
         padding: 0;
     }
+}
+
+/* Pull to Refresh Styling */
+.pull-to-refresh-indicator {
+    position: fixed;
+    top: -60px; /* លាក់នៅខាងលើសិន */
+    left: 0;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    padding: 15px;
+    background-color: var(--card-bg, #ffffff);
+    color: var(--primary-color, #7B61FF);
+    font-weight: 600;
+    font-size: 0.95rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    z-index: 9999; /* ធ្វើឱ្យវានៅលើគេបង្អស់ (On Top) */
+    transition: top 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    border-radius: 0 0 20px 20px;
+}
+
+.pull-to-refresh-indicator.visible {
+    top: 0; /* លោតចេញមកក្រោមពេលសិស្សទាញអេក្រង់ */
 }

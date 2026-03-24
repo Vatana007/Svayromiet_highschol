@@ -322,6 +322,13 @@ body {
     -webkit-backdrop-filter: var(--glass-blur);
     border: 1px solid var(--glass-border);
     box-shadow: var(--glass-shadow);
+    border-radius: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+    transition: transform 0.3s, box-shadow 0.3s;
 }
 
 .glass-panel-flat {
@@ -1349,6 +1356,110 @@ body {
     transition: 0.3s;
 }
 
+/* =========================================================
+   🔐 LOGIN FORM / AUTH PANEL STYLES
+   ========================================================= */
+
+/* 1. Center the entire login container on the screen */
+.auth-container {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    z-index: 1000;
+}
+
+/* 2. Style the main glass card */
+.auth-panel {
+    width: 100%;
+    max-width: 420px;
+    padding: 48px 40px;
+    text-align: center;
+    /* Unset the flex layout from .glass-panel to allow block layout */
+    display: block;
+}
+
+/* 3. Brand / Logo alignment */
+.auth-brand {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 8px;
+}
+
+.auth-brand h2 {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--text-main);
+    letter-spacing: -0.5px;
+}
+
+/* 4. Subtitle text spacing */
+.auth-panel p {
+    color: var(--text-mut);
+    font-size: 15px;
+    margin-bottom: 32px;
+}
+
+/* 5. Form Fields and Spacing */
+#loginForm {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* 6. Icon alignment inside the inputs */
+.field-group {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 100%;
+}
+
+.field-group i {
+    position: absolute;
+    left: 18px;
+    top: 50%;
+    transform: translateY(-50%); /* Keeps it perfectly centered vertically */
+    z-index: 10; /* Pulls the icon IN FRONT of the glass input */
+    font-size: 20px;
+    color: var(--text-mut);
+    transition: color 0.3s ease;
+    pointer-events: none; 
+}
+
+.logo_admin {
+    width: 150px;
+    height: auto;
+}
+
+/* Highlight the icon when the user clicks into the input */
+.field-group:focus-within i {
+    color: var(--primary);
+}
+
+/* Adjust input padding to make room for the absolute icon */
+.field-group .glass-input {
+    padding-left: 48px;
+    height: 52px;
+    font-size: 15px;
+}
+
+/* 7. Beef up the Sign In button slightly */
+.auth-panel .btn-glass-primary {
+    height: 52px;
+    margin-top: 8px;
+    font-size: 16px;
+    letter-spacing: 0.5px;
+}
+
+.auth-panel .btn-glass-primary i {
+    font-size: 20px;
+}
+
 /* --- FIX: Command Palette Search Box Overlap --- */
 .search-box.huge {
     display: flex !important;
@@ -1495,7 +1606,7 @@ body {
 .filter-bar.multi {
     display: grid !important;
     /* 4 equal columns for dropdowns, 1 auto-sized column for the reset button */
-    grid-template-columns: 1fr 1fr 1fr 1fr auto !important; 
+    grid-template-columns: 1fr 1fr 1fr 1fr auto !important;
     gap: 12px !important;
     width: 100% !important;
     align-items: center !important;
@@ -1503,7 +1614,8 @@ body {
 
 .filter-bar.multi select {
     width: 100% !important;
-    min-width: 0 !important; /* Prevents stretching */
+    min-width: 0 !important;
+    /* Prevents stretching */
     margin: 0 !important;
 }
 
@@ -1512,6 +1624,7 @@ body {
     cursor: pointer !important;
     transition: opacity 0.2s !important;
 }
+
 .brand-info:hover {
     opacity: 0.7 !important;
 }
@@ -1519,11 +1632,13 @@ body {
 /* 3. Mobile Layout: 1 Column */
 @media (max-width: 768px) {
     .filter-bar.multi {
-        grid-template-columns: 1fr !important; /* Stacks everything in 1 column */
+        grid-template-columns: 1fr !important;
+        /* Stacks everything in 1 column */
     }
-    
+
     .filter-bar.multi button {
-        width: 100% !important; /* Makes reset button full width on phones */
+        width: 100% !important;
+        /* Makes reset button full width on phones */
         justify-content: center !important;
         margin-top: 4px !important;
     }

@@ -45,16 +45,14 @@
                 <h1 class="login-title" data-translate-key="login_title">Login</h1>
                 <p class="login-subtitle" data-translate-key="login_subtitle">Welcome back</p>
             </div>
-            <img src="images/high_logo.png"
-                alt="logo of the school."
-                class="login-illustration" loading="lazy">
+            <img src="images/high_logo.png" alt="logo of the school." class="login-illustration" loading="lazy">
             <form id="loginForm" class="login-form">
-                <h2 class="form-prompt" data-translate-key="login_form_prompt" id="login-form-label">Enter Your Information</h2>
+                <h2 class="form-prompt" data-translate-key="login_form_prompt" id="login-form-label">Enter Your
+                    Information</h2>
                 <div style="margin-bottom: 1rem;">
                     <input id="studentId" name="studentId" type="text" required class="form-input"
                         placeholder="Enter Student ID" data-translate-key="placeholder_student_id"
-                        autocomplete="username" value="DIT2024" aria-labelledby="login-form-label"
-                        aria-describedby="loginError">
+                        autocomplete="username" aria-labelledby="login-form-label" aria-describedby="loginError">
                 </div>
                 <div class="password-wrapper">
                     <input id="password" name="password" type="password" autocomplete="current-password" required
@@ -177,7 +175,7 @@
                                 data-translate-key="home_open_schedule">Open schedule</span> <i
                                 class='bx bx-chevron-right' aria-hidden="true"></i></a>
                     </div>
-                    
+
                     <div id="today-classes-container" class="horizontal-carousel">
                         <div class="skeleton skeleton-class-card"></div>
                         <div class="skeleton skeleton-class-card"></div>
@@ -477,11 +475,11 @@
                                 </div>
 
                                 <button id="withdrawRequestBtn" class="button button-primary"
-                                    style="margin-top: 1rem; background-color: var(--status-denied-text); box-shadow: none;">
+                                    style="margin-top: 1rem; background-color: var(--status-pending-text); box-shadow: none;">
                                     <span data-translate-key="perm_btn_withdraw">Withdraw Request</span>
                                 </button>
                                 <button id="requestNewPermissionBtn" class="button button-primary"
-                                    style="margin-top: 1rem; box-shadow: none; display: none;">
+                                    style="margin-top: 1rem; box-shadow: none; display: none; background-color: var(--status-approved-text);">
                                     <span data-translate-key="perm_btn_request_again">Request Again</span>
                                 </button>
                                 <button id="checkInBtn" class="button button-primary"
@@ -535,7 +533,7 @@
                             <img id="profile-img-view" class="profile-img-lg"
                                 src="${profile.profileImgUrl || `https://placehold.co/128x128/eeeeee/333333?text=${profile.englishName?.[0] || '?'}`}"
                                 alt="Student profile picture">
-                            <h2 id="profile-englishName-view" class="profile-name">${profile.englishName || 'N/A'}</h2>
+                            <h2 id="profile-englishName-view" class="profile-name">${profile.khmerName || profile.englishName || 'N/A'}</h2>
                             <p id="profile-id-view" class="profile-id">${profile.studentId || 'N/A'}</p>
                         </div>
                     `;

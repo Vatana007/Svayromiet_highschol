@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
     const ADMIN_VERSION = '4.0.0'; // Glassmorphism Version
-    const API_URL = "https://script.google.com/macros/s/AKfycbxpeIu-fjcJa2Xy-hMyhSR72ofeR_DWsCp7xJyT1hm-umZWe77UfcdgtNW1lYHqL93v_A/exec";
+    const API_URL = "https://script.google.com/macros/s/AKfycbyU-gBFaLZmSXRVd8VhIsRo8-3dKd1L6PbnXdXqZxJtWrJM1tGI7J5hcXWBL3IlfDnG/exec";
     let cache = { students: null, schedule: null, exams: null, reqs: null, announcements: null, feedback: null };
     let debounceTimer;
 
@@ -95,7 +95,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
         document.getElementById(`tab-${tab}`).classList.add('active');
 
-        const tMap = { 'overview': 'Overview', 'students': 'Student Hub', 'schedule': 'Master Schedule', 'exams': 'Exams', 'requests': 'Permissions', 'announcements': 'News', 'feedback': 'Feedback' };
+        const tMap = { 'overview': 'Overview', 'students': 'Student Hub', 'scores': 'Scores Dashboard', 'schedule': 'Master Schedule', 'exams': 'Exams', 'requests': 'Permissions', 'announcements': 'News', 'feedback': 'Feedback' };
         document.getElementById('pageHeader').textContent = tMap[tab];
         document.getElementById('sideNav').classList.remove('open'); document.getElementById('mobileOverlay').classList.remove('active');
 
@@ -324,12 +324,11 @@ document.addEventListener('DOMContentLoaded', () => {
     function endLoading() { document.getElementById('globalLoader').classList.add('loading-complete'); setTimeout(() => document.getElementById('globalLoader').className = 'glass-loader', 300); }
     function showToast(msg, type = 'success') { const c = document.getElementById('toast-container'); const i = type === 'error' ? 'ri-error-warning-fill' : 'ri-check-line'; const t = document.createElement('div'); t.className = `toast-card toast-${type}`; t.innerHTML = `<i class="${i}"></i> ${msg}`; c.appendChild(t); setTimeout(() => { t.classList.add('hide'); setTimeout(() => t.remove(), 300); }, 3000); }
     function showConfirm(title, msg) { return new Promise(r => { const m = document.getElementById('confirmModal'); m.querySelector('h3').textContent = title; m.querySelector('p').textContent = msg; m.classList.add('active'); const y = document.getElementById('btnConfirm'), n = document.getElementById('btnCancel'); const handle = (c) => { m.classList.remove('active'); y.replaceWith(y.cloneNode(true)); n.replaceWith(n.cloneNode(true)); r(c); }; document.getElementById('btnConfirm').addEventListener('click', () => handle(true)); document.getElementById('btnCancel').addEventListener('click', () => handle(false)); }); }
-        // --- QUICK FIX: CLICK LOGO TO RELOAD PAGE ---
+    // --- QUICK FIX: CLICK LOGO TO RELOAD PAGE ---
     const brandLogo = document.querySelector('.brand-info');
     if (brandLogo) {
         brandLogo.addEventListener('click', () => {
             window.location.reload(); // Hard reloads the entire application
         });
     }
-
 });
