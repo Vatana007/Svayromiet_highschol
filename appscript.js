@@ -3,12 +3,18 @@
  * Includes: Student App Logic + Prime Admin Panel Features
  */
 
+function testDriveAccess() {
+  const file = DriveApp.createFile('test.txt', 'hello', MimeType.PLAIN_TEXT);
+  file.setTrashed(true);
+  Logger.log('Drive works!');
+}
+
 // ==========================================
 // --- 1. CONFIGURATION ---
 // ==========================================
 
 const ADMIN_EMAIL = "vuthvatana09@gmail.com";
-const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyU-gBFaLZmSXRVd8VhIsRo8-3dKd1L6PbnXdXqZxJtWrJM1tGI7J5hcXWBL3IlfDnG/exec";
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxpeIu-fjcJa2Xy-hMyhSR72ofeR_DWsCp7xJyT1hm-umZWe77UfcdgtNW1lYHqL93v_A/exec";
 
 // STATIC DATABASES
 const DB_USERS_ID = "1-KZ1XMbSP6f-MXbLdFdf-dxeZj2IKPfB6jRg7cfkqdk";
@@ -19,24 +25,18 @@ const DB_ACADEMIC_MAP = {
   // GENERATION 1
   "1": {
     "10": {
-      scores: "", // Gen 1, Grade 10 Scores
-      attendance: "" // Gen 1, Grade 10 Attendance
+      scores: "",
+      attendance: ""
     },
-    "11": {
-      scores: "1RxDilY1ZZW6wv153eUcz8FWx2M6ywJLlKs4xKY3IgXw", // Gen 1, Grade 10 Scores
+    "11D": {
+      scores: "1XMKlhqAKBVhroAJqeS6Uy4r5y-rMuX3ZrnhNXyYAYnQ", // <--- ដាក់ ID ថ្មីរបស់អ្នកនៅត្រង់នេះ
       attendance: "1LeC-lV3mQJpD4v_sdsAy_B_ggpSRQvGMtpjWY8T08x8"
     },
     "12": {
       scores: "PASTE_GEN_1_GRADE_12_SCORES_ID",
       attendance: "PASTE_GEN_1_GRADE_12_ATTENDANCE_ID"
-    },
-    // Fallback for Gen 1 if grade is unknown
-    "default": {
-      scores: "1RxDilY1ZZW6wv153eUcz8FWx2M6ywJLlKs4xKY3IgXw",
-      attendance: "1LeC-lV3mQJpD4v_sdsAy_B_ggpSRQvGMtpjWY8T08x8"
     }
   },
-
   // GENERATION 2
   "2": {
     "10": {
@@ -57,6 +57,54 @@ const DB_ACADEMIC_MAP = {
     }
   }
 };
+
+// បន្ថែម ឬជំនួស Function នេះទៅក្នុង appscript.js របស់អ្នក
+function saveStudentScore(payload) {
+  try {
+    // ឧទាហរណ៍ការទាញយក ID របស់ Sheet: 
+    // const targetDbId = DB_ACADEMIC_MAP[payload.generation][payload.grade].scores;
+
+    // payload.termName អាចជា "October", "November" ឬ "Semester 1", "Semester 2"
+    const sheetName = payload.termName || "Sheet1";
+    const sheet = SpreadsheetApp.openById(targetDbId).getSheetByName(sheetName);
+
+    if (!sheet) {
+      return { success: false, message: `រកមិនឃើញផ្ទាំងបញ្ចួលពិន្ទុសម្រាប់ "${sheetName}" ទេ! សូមបង្កើត Sheet នេះសិន។` };
+    }
+
+    // រៀបចំទិន្នន័យជាជួរ (Row) តាមលំដាប់ពី Column A ដល់ U
+    const newRow = [
+      payload.no || "",                 // A: ល.រ
+      payload.studentId || "",          // B: អត្តលេខ
+      payload.studentName || "",        // C: គោត្តនាម និង នាម
+      payload.gender || "",             // D: ភេទ
+      payload.math || 0,                // E: គណិត
+      payload.physics || 0,             // F: រូប
+      payload.chemistry || 0,           // G: គីមី
+      payload.biology || 0,             // H: ជីវ
+      payload.earth || 0,               // I: ផែនដី
+      payload.history || 0,             // J: ប្រវត្តិ
+      payload.geography || 0,           // K: ភូមិ
+      payload.civics || 0,              // L: ពលរដ្ឋ
+      payload.khmer || 0,               // M: ខ្មែរ
+      payload.english || 0,             // N: អង់គ្លេស
+      payload.pe || 0,                  // O: អ.កាយ
+      payload.ict || 0,                 // P: កសិកម្ម/ICT
+      payload.totalScore || 0,          // Q: ពិន្ទុសរុប
+      payload.average || 0,             // R: មធ្យមភាគ
+      payload.rank || "",               // S: ចំណាត់ថ្នាក់
+      payload.grade || "",              // T: និទ្ទេស
+      payload.note || ""                // U: ផ្សេងៗ
+    ];
+
+    // បញ្ចូលទិន្នន័យទៅកាន់ជួរបន្ទាប់ (Append Row)
+    sheet.appendRow(newRow);
+
+    return { success: true, message: `រក្សាទុកពិន្ទុចូល ${sheetName} បានជោគជ័យ!` };
+  } catch (error) {
+    return { success: false, message: "មានបញ្ហា: " + error.message };
+  }
+}
 
 // ==========================================
 // --- 2. ROUTING (doGet & doPost) ---
@@ -115,11 +163,17 @@ function doGet(e) {
       case 'adminGetAllExams': // For the new Exam Tab
         result = adminGetAllExams();
         break;
+      case 'adminGetAllScores': // NEW SCORE ENDPOINT
+        result = adminGetAllScores();
+        break;
       case 'adminGetAnnouncements':
         result = adminGetAnnouncements();
         break;
       case 'adminGetAllFeedback':
         result = adminGetAllFeedback();
+        break;
+      case 'adminGetScoreFilters':
+        result = adminGetScoreFilters();
         break;
       case 'apiAdminAction': // JSON Action for Dashboard buttons
         result = handleAdminActionJSON(params.id, params.status);
@@ -140,6 +194,187 @@ function doGet(e) {
   } catch (err) {
     return ContentService.createTextOutput(JSON.stringify({ success: false, message: err.toString() }))
       .setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+function adminGetScoreFilters() {
+  try {
+    const ss = SpreadsheetApp.openById(DB_USERS_ID);
+
+    // 1. Get Generations and Grades from "Users" sheet
+    const usersSheet = ss.getSheetByName("Users");
+    let generations = new Set();
+    let grades = new Set();
+
+    if (usersSheet) {
+      const usersData = usersSheet.getDataRange().getValues();
+      const headers = usersData[0].map(h => String(h).toLowerCase().trim());
+
+      // Look for headers, but fallback to Column I (index 8) and Column J (index 9) if headers change
+      let gradeIdx = headers.indexOf('grade');
+      if (gradeIdx === -1) gradeIdx = 8; // Column I
+
+      let genIdx = headers.indexOf('generation');
+      if (genIdx === -1) genIdx = headers.indexOf('gen');
+      if (genIdx === -1) genIdx = 9; // Column J
+
+      // Start from row 1 to skip headers
+      for (let i = 1; i < usersData.length; i++) {
+        let g = String(usersData[i][gradeIdx]).trim();
+        let gen = String(usersData[i][genIdx]).trim();
+
+        if (g) grades.add(g);
+        if (gen) generations.add(gen);
+      }
+    }
+
+    // 2. Get Terms/Months from "Score" sheet
+    let terms = new Set();
+
+    // Loop through all generation/grade entries that have a valid scores DB ID
+    for (let gen in DB_ACADEMIC_MAP) {
+      for (let targetGrade in DB_ACADEMIC_MAP[gen]) {
+        let dbId = DB_ACADEMIC_MAP[gen][targetGrade].scores;
+        if (!dbId || dbId.includes("PASTE_") || dbId === "") continue;
+
+        try {
+          const scoresSS = SpreadsheetApp.openById(dbId);
+          const sheets = scoresSS.getSheets();
+
+          sheets.forEach(sheet => {
+            const name = sheet.getName().trim();
+            // Skip sheets that look like system/template sheets
+            if (name && name.toLowerCase() !== "sheet1" && name.toLowerCase() !== "template") {
+              terms.add(name);
+            }
+          });
+        } catch (e) {
+          // Skip if a spreadsheet can't be opened
+        }
+      }
+    }
+
+    return {
+      success: true,
+      data: {
+        // Convert Sets back to arrays and sort them cleanly
+        generations: Array.from(generations).sort((a, b) => a - b),
+        grades: Array.from(grades).sort((a, b) => a - b),
+        terms: Array.from(terms)
+      }
+    };
+  } catch (e) {
+    return { success: false, message: e.toString() };
+  }
+}
+
+function adminGetAllScores() {
+  try {
+    let allScores = [];
+
+    // 1. Fetch User Map (To display English Names)
+    let userMap = {};
+    try {
+      const ssUsers = SpreadsheetApp.openById(DB_USERS_ID);
+      const userSheet = ssUsers.getSheetByName("Users");
+      if (userSheet) {
+        const userData = userSheet.getDataRange().getValues();
+        const headers = userData[0].map(h => String(h).toLowerCase().trim());
+        const idIdx = headers.indexOf('studentid');
+        const nameIdx = headers.indexOf('englishname');
+        if (idIdx !== -1 && nameIdx !== -1) {
+          for (let i = 1; i < userData.length; i++) {
+            userMap[String(userData[i][idIdx]).trim()] = userData[i][nameIdx];
+          }
+        }
+      }
+    } catch (e) { }
+
+    // 2. Loop through Dynamic Databases
+    for (let gen in DB_ACADEMIC_MAP) {
+      for (let targetGrade in DB_ACADEMIC_MAP[gen]) {
+        let dbId = DB_ACADEMIC_MAP[gen][targetGrade].scores;
+        if (!dbId || dbId.includes("PASTE_") || dbId === "") continue;
+
+        let ss = SpreadsheetApp.openById(dbId);
+        let sheets = ss.getSheets();
+
+        sheets.forEach(sheet => {
+          let sheetName = sheet.getName();
+          let data = sheet.getDataRange().getValues();
+          if (data.length < 2) return;
+
+          let headers = data[0].map(h => String(h).toLowerCase().trim());
+
+          // Helper function to find column index by multiple possible names (English/Khmer)
+          const getCol = (...names) => {
+            for (let n of names) {
+              let idx = headers.indexOf(n.toLowerCase());
+              if (idx !== -1) return idx;
+            }
+            return -1;
+          };
+
+          // Map the columns
+          let idIdx = getCol('studentid', 'អត្តលេខ', 'id');
+          let nameIdx = getCol('studentname', 'ឈ្មោះសិស្ស', 'ឈ្មោះ', 'name');
+          let genderIdx = getCol('gender', 'sex', 'ភេទ');
+          let gradeIdx = getCol('grade', 'ថ្នាក់', 'កម្រិតថ្នាក់');
+          let classIdx = getCol('class', 'section', 'បន្ទប់');
+
+          // Subjects
+          let mathIdx = getCol('math', 'គណិតវិទ្យា', 'គណិត');
+          let phyIdx = getCol('physics', 'phy', 'រូបវិទ្យា', 'រូប');
+          let chemIdx = getCol('chemistry', 'chem', 'គីមីវិទ្យា', 'គីមី');
+          let bioIdx = getCol('biology', 'bio', 'ជីវវិទ្យា', 'ជីវ');
+          let earthIdx = getCol('earth', 'ផែនដីវិទ្យា', 'ផែនដី');
+          let hisIdx = getCol('history', 'his', 'ប្រវត្តិវិទ្យា', 'ប្រវត្តិ');
+          let geoIdx = getCol('geography', 'geo', 'ភូមិវិទ្យា', 'ភូមិ');
+          let civIdx = getCol('civics', 'civ', 'ពលរដ្ឋវិជ្ជា', 'ពលរដ្ឋ');
+          let khmIdx = getCol('khmer', 'khm', 'ភាសាខ្មែរ', 'ខ្មែរ');
+          let engIdx = getCol('english', 'eng', 'ភាសាអង់គ្លេស', 'អង់គ្លេស');
+          let peIdx = getCol('pe', 'អប់រំកាយ', 'កីឡា');
+          let ictIdx = getCol('ict', 'កសិកម្ម/ict', 'កុំព្យូទ័រ');
+
+          // Results
+          let totalIdx = getCol('totalscore', 'total', 'ពិន្ទុសរុប');
+          let avgIdx = getCol('average', 'avg', 'មធ្យមភាគ');
+          let rankIdx = getCol('rank', 'ចំណាត់ថ្នាក់');
+          let gradeLetterIdx = getCol('និទ្ទេស', 'gradeletter'); // Kept separate from class grade
+
+          if (idIdx === -1) return;
+
+          for (let i = 1; i < data.length; i++) {
+            let row = data[i];
+            let sId = String(row[idIdx]).trim();
+            if (!sId) continue;
+
+            const getVal = (idx) => idx !== -1 ? row[idx] : '';
+
+            allScores.push({
+              studentId: sId,
+              name: userMap[sId] || getVal(nameIdx) || 'Unknown',
+              gender: getVal(genderIdx),
+              category: sheetName,
+              grade: gradeIdx !== -1 ? row[gradeIdx] : targetGrade,
+              class: classIdx !== -1 ? row[classIdx] : 'N/A',
+
+              math: getVal(mathIdx), phy: getVal(phyIdx), chem: getVal(chemIdx), bio: getVal(bioIdx),
+              earth: getVal(earthIdx), his: getVal(hisIdx), geo: getVal(geoIdx), civ: getVal(civIdx),
+              khm: getVal(khmIdx), eng: getVal(engIdx), pe: getVal(peIdx), ict: getVal(ictIdx),
+
+              total: getVal(totalIdx),
+              average: getVal(avgIdx),
+              rank: getVal(rankIdx),
+              gradeLetter: getVal(gradeLetterIdx)
+            });
+          }
+        });
+      }
+    }
+    return { success: true, data: allScores.reverse() }; // Newest first
+  } catch (e) {
+    return { success: false, message: e.toString() };
   }
 }
 
@@ -216,6 +451,9 @@ function doPost(e) {
       case 'updateProfileField':
         result = updateProfileField(payload);
         break;
+      case 'uploadImage':
+        result = uploadImage(payload);
+        break;
       case 'changePassword':
         result = changePassword(payload);
         break;
@@ -255,6 +493,10 @@ function doPost(e) {
         result = adminPostAnnouncement(payload);
         break;
 
+      case 'adminGetSpecificScores':
+        result = adminGetSpecificScores(payload);
+        break;
+
       case 'adminCreateStudentSheet':
         const resultSheet = adminCreateStudentSheet();
         return ContentService.createTextOutput(JSON.stringify(resultSheet))
@@ -268,6 +510,112 @@ function doPost(e) {
   } catch (err) {
     return ContentService.createTextOutput(JSON.stringify({ success: false, message: err.toString() }))
       .setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+function adminGetSpecificScores(payload) {
+  try {
+    const gen = String(payload.generation);
+    const targetGrade = String(payload.grade);
+    const term = String(payload.term);
+
+    // 1. Find the correct database ID based on Gen and Grade
+    let dbId = "";
+    if (DB_ACADEMIC_MAP[gen] && DB_ACADEMIC_MAP[gen][targetGrade]) {
+      dbId = DB_ACADEMIC_MAP[gen][targetGrade].scores;
+    } else if (DB_ACADEMIC_MAP[gen] && DB_ACADEMIC_MAP[gen]["default"]) {
+      dbId = DB_ACADEMIC_MAP[gen]["default"].scores;
+    }
+
+    if (!dbId || dbId.includes("PASTE_") || dbId === "") {
+      return { success: false, message: "រកមិនឃើញទិន្នន័យសម្រាប់ជំនាន់ និងថ្នាក់នេះទេ (Database missing)." };
+    }
+
+    // 2. Open the Sheet and target the specific month/term
+    const ss = SpreadsheetApp.openById(dbId);
+    const sheet = ss.getSheetByName(term);
+
+    if (!sheet) {
+      return { success: false, message: `មិនមានទិន្នន័យសម្រាប់ខែ/ឆមាស: "${term}" ទេ!` };
+    }
+
+    // 3. Fetch User Map (For English Names)
+    let userMap = {};
+    try {
+      const ssUsers = SpreadsheetApp.openById(DB_USERS_ID);
+      const userSheet = ssUsers.getSheetByName("Users");
+      if (userSheet) {
+        const userData = userSheet.getDataRange().getValues();
+        const h = userData[0].map(x => String(x).toLowerCase().trim());
+        const idIdx = h.indexOf('studentid');
+        const nameIdx = h.indexOf('englishname');
+        if (idIdx !== -1 && nameIdx !== -1) {
+          for (let i = 1; i < userData.length; i++) userMap[String(userData[i][idIdx]).trim()] = userData[i][nameIdx];
+        }
+      }
+    } catch (e) { }
+
+    // 4. Read the target sheet data
+    const data = sheet.getDataRange().getValues();
+    if (data.length < 2) return { success: true, data: [] };
+
+    let headers = data[0].map(h => String(h).toLowerCase().trim());
+
+    const getCol = (...names) => {
+      for (let n of names) { let idx = headers.indexOf(n.toLowerCase()); if (idx !== -1) return idx; }
+      return -1;
+    };
+
+    let idIdx = getCol('studentid', 'អត្តលេខ', 'id');
+    let nameIdx = getCol('studentname', 'ឈ្មោះសិស្ស', 'ឈ្មោះ', 'name');
+    let genderIdx = getCol('gender', 'sex', 'ភេទ');
+    let classIdx = getCol('class', 'section', 'បន្ទប់');
+
+    let mathIdx = getCol('math', 'គណិតវិទ្យា', 'គណិត');
+    let phyIdx = getCol('physics', 'phy', 'រូបវិទ្យា', 'រូប');
+    let chemIdx = getCol('chemistry', 'chem', 'គីមីវិទ្យា', 'គីមី');
+    let bioIdx = getCol('biology', 'bio', 'ជីវវិទ្យា', 'ជីវ');
+    let earthIdx = getCol('earth', 'ផែនដីវិទ្យា', 'ផែនដី');
+    let hisIdx = getCol('history', 'his', 'ប្រវត្តិវិទ្យា', 'ប្រវត្តិ');
+    let geoIdx = getCol('geography', 'geo', 'ភូមិវិទ្យា', 'ភូមិ');
+    let civIdx = getCol('civics', 'civ', 'ពលរដ្ឋវិជ្ជា', 'ពលរដ្ឋ');
+    let khmIdx = getCol('khmer', 'khm', 'ភាសាខ្មែរ', 'ខ្មែរ');
+    let engIdx = getCol('english', 'eng', 'ភាសាអង់គ្លេស', 'អង់គ្លេស');
+    let peIdx = getCol('pe', 'អប់រំកាយ', 'កីឡា');
+    let ictIdx = getCol('ict', 'កសិកម្ម/ict', 'កុំព្យូទ័រ');
+
+    let totalIdx = getCol('totalscore', 'total', 'ពិន្ទុសរុប');
+    let avgIdx = getCol('average', 'avg', 'មធ្យមភាគ');
+    let rankIdx = getCol('rank', 'ចំណាត់ថ្នាក់');
+    let gradeLetterIdx = getCol('និទ្ទេស', 'gradeletter');
+
+    if (idIdx === -1) return { success: false, message: "ទម្រង់តារាងខុស (Invalid Sheet Format)." };
+
+    let allScores = [];
+    for (let i = 1; i < data.length; i++) {
+      let row = data[i];
+      let sId = String(row[idIdx]).trim();
+      if (!sId) continue;
+
+      const getVal = (idx) => idx !== -1 ? row[idx] : '';
+
+      allScores.push({
+        studentId: sId,
+        name: userMap[sId] || getVal(nameIdx) || 'Unknown',
+        gender: getVal(genderIdx),
+        category: term,
+        grade: targetGrade,
+        class: classIdx !== -1 ? row[classIdx] : 'N/A',
+        math: getVal(mathIdx), phy: getVal(phyIdx), chem: getVal(chemIdx), bio: getVal(bioIdx),
+        earth: getVal(earthIdx), his: getVal(hisIdx), geo: getVal(geoIdx), civ: getVal(civIdx),
+        khm: getVal(khmIdx), eng: getVal(engIdx), pe: getVal(peIdx), ict: getVal(ictIdx),
+        total: getVal(totalIdx), average: getVal(avgIdx), rank: getVal(rankIdx), gradeLetter: getVal(gradeLetterIdx)
+      });
+    }
+
+    return { success: true, data: allScores };
+  } catch (e) {
+    return { success: false, message: "Error: " + e.toString() };
   }
 }
 
@@ -408,18 +756,17 @@ function resetPasswordWithOTP(payload) {
 
 function adminHandleRequest(payload) {
   const LOCK = LockService.getScriptLock();
-  // Wait up to 10 seconds for other users to finish writing
   if (!LOCK.tryLock(10000)) return { success: false, message: "System busy, please try again." };
 
   try {
     const ss = SpreadsheetApp.openById(DB_PERMS_ID);
     const sheet = ss.getSheetByName("All of Permissions");
     const data = sheet.getDataRange().getValues();
+    const headers = data[0].map(h => String(h).toLowerCase().trim());
 
     const targetId = String(payload.id).trim();
     let foundIndex = -1;
 
-    // 1. FIND ROW by Transaction ID (Column H / Index 7)
     for (let i = 1; i < data.length; i++) {
       if (String(data[i][7] || "").trim() === targetId) {
         foundIndex = i;
@@ -431,27 +778,40 @@ function adminHandleRequest(payload) {
       return { success: false, message: "Transaction ID not found in Sheet." };
     }
 
-    const newStatus = payload.status; // "Approved" or "Rejected"
-
-    // 2. UPDATE MASTER SHEET (Column G is 7th column)
+    const newStatus = payload.status;
     sheet.getRange(foundIndex + 1, 7).setValue(newStatus);
 
-    // 3. COPY TO SEPARATE SHEET (Approved / Rejected)
     let targetSheet = ss.getSheetByName(newStatus);
-
-    // If the sheet doesn't exist yet, create it and add headers
     if (!targetSheet) {
       targetSheet = ss.insertSheet(newStatus);
-      targetSheet.appendRow(data[0]); // Copy headers from master sheet
+      targetSheet.appendRow(data[0]);
       targetSheet.getRange(1, 1, 1, data[0].length).setFontWeight("bold");
     }
 
-    // Grab the data row, update its status, and append it to the new sheet
     let rowData = data[foundIndex];
-    rowData[6] = newStatus; // Update status in the array (Index 6)
+    rowData[6] = newStatus;
     targetSheet.appendRow(rowData);
 
-    // 4. RETURN SUCCESS
+    // ==========================================
+    // ចាប់យក "មូលហេតុ" ពី Column D (Index 3) 
+    // ឬស្វែងរកតាមឈ្មោះ Header ដោយស្វ័យប្រវត្តិ
+    // ==========================================
+    if (newStatus === "Approved") {
+      const idIdx = headers.indexOf('studentid') !== -1 ? headers.indexOf('studentid') : 1;
+      const genIdx = headers.indexOf('generation') !== -1 ? headers.indexOf('generation') : 2;
+      const dateIdx = headers.indexOf('requestdate') !== -1 ? headers.indexOf('requestdate') : (headers.indexOf('date') !== -1 ? headers.indexOf('date') : 3);
+
+      // ចាប់យក Reason ពី Column D (លេខ 3) ជាគោល
+      const reasonIdx = headers.indexOf('reason') !== -1 ? headers.indexOf('reason') : 3;
+
+      const sId = rowData[idIdx];
+      const sDate = rowData[dateIdx];
+      const sReason = rowData[reasonIdx]; // ទាញយកមូលហេតុ
+      const sGen = rowData[genIdx];
+
+      syncPermissionToAttendance(sId, sDate, sReason, sGen);
+    }
+
     return { success: true, message: "Updated successfully" };
 
   } catch (e) {
@@ -460,8 +820,6 @@ function adminHandleRequest(payload) {
     LOCK.releaseLock();
   }
 }
-
-
 // --- NEW SESSION SECURITY FUNCTIONS ---
 
 function createSession(studentId) {
@@ -643,23 +1001,35 @@ function handleAdminActionJSON(transId, status) {
   const ss = SpreadsheetApp.openById(DB_PERMS_ID);
   const sheet = ss.getSheetByName("All of Permissions");
   const data = sheet.getDataRange().getValues();
+  const headers = data[0].map(h => String(h).toLowerCase().trim());
 
-  // Find row by Transaction ID (Column 8 / Index 7)
   for (let i = 1; i < data.length; i++) {
     if (String(data[i][7]) === String(transId)) {
-      // Update Status (Column 7 / Index 6)
       sheet.getRange(i + 1, 7).setValue(status);
 
-      // If Approved, copy to Approved sheet
       if (status === "Approved") {
         let approvedSheet = ss.getSheetByName("Approved");
         if (!approvedSheet) approvedSheet = ss.insertSheet("Approved");
         let rowData = data[i];
-        rowData[6] = "Approved"; // Ensure status is updated in copy
+        rowData[6] = "Approved"; 
         approvedSheet.appendRow(rowData);
-      }
+        
+        // ==========================================
+        // ចាប់យក "មូលហេតុ" ពី Column D (Index 3) 
+        // ==========================================
+        const idIdx = headers.indexOf('studentid') !== -1 ? headers.indexOf('studentid') : 1;
+        const genIdx = headers.indexOf('generation') !== -1 ? headers.indexOf('generation') : 2;
+        const dateIdx = headers.indexOf('requestdate') !== -1 ? headers.indexOf('requestdate') : (headers.indexOf('date') !== -1 ? headers.indexOf('date') : 3);
+        const reasonIdx = headers.indexOf('reason') !== -1 ? headers.indexOf('reason') : 3; 
 
-      // Notify Student
+        const sId = data[i][idIdx];
+        const sDate = data[i][dateIdx];
+        const sReason = data[i][reasonIdx]; // ទាញយកមូលហេតុ
+        const sGen = data[i][genIdx];
+
+        syncPermissionToAttendance(sId, sDate, sReason, sGen);
+      }
+      
       const studentId = data[i][1];
       sendStudentNotification(studentId, status, transId);
 
@@ -673,16 +1043,37 @@ function handleAdminActionJSON(transId, status) {
 // --- 4. STUDENT APP LOGIC (ORIGINAL) ---
 // ==========================================
 
+function debugProfile() {
+  const data = getSheetData(DB_USERS_ID, "Users");
+  const first = data[0]; // Get first student row
+  Logger.log(JSON.stringify(first)); // Print all fields
+}
+
 function handleLogin(id, pass) {
   const data = getSheetData(DB_USERS_ID, "Users");
-  const user = data.find(u => String(u['studentId']) === String(id) && String(u['password']) === String(pass));
+
+  // ជួសជុល៖ ការពារការដកឃ្លា (Space) និងអក្សរធំ/តូច (case-insensitive)
+  const user = data.find(u =>
+    String(u['studentId']).trim().toUpperCase() === String(id).trim().toUpperCase() &&
+    String(u['password']).trim() === String(pass).trim()
+  );
 
   if (user) {
     logLogin(id, "Success");
-    // Generate secure token
     const sessionToken = createSession(id);
-    return { success: true, token: sessionToken };
+
+    // ជួសជុល៖ ប្តូរពី 'profile' មក 'user' វិញទើបវាស្គាល់
+    const normalizedProfile = Object.assign({}, user);
+    if (!normalizedProfile.englishName) {
+      normalizedProfile.englishName =
+        user.EnglishName || user.english_name ||
+        user.fullName || user.name || '';
+    }
+
+    // ជួសជុល៖ ប្តូរពី 'token: token' មក 'token: sessionToken' វិញ
+    return { success: true, token: sessionToken, user: normalizedProfile };
   }
+
   logLogin(id, "Failed");
   return { success: false, message: "Invalid ID or Password" };
 }
@@ -699,14 +1090,14 @@ function getInitialDashboardData(token) {
 
   // Strictly use "class" instead of section
   const studentClass = String(profile.class || "").trim().toLowerCase();
-  
+
   const mySchedule = allSchedule.filter(s => {
     const genMatch = String(s.generation || s.Gen || "") === String(profile.generation);
     const gradeMatch = String(s.grade || s.Grade || "") === String(profile.grade);
-    
+
     const schedClass = String(s.class || s.Class || "").trim().toLowerCase();
     const classMatch = schedClass === "" || studentClass === "" || schedClass === studentClass;
-    
+
     return genMatch && gradeMatch && classMatch;
   }).map(s => ({
     day: s.DayOfWeek || s.Day || "",
@@ -728,7 +1119,7 @@ function getInitialDashboardData(token) {
       profile: profile,
       announcements: getSheetData(DB_USERS_ID, "Announcements"),
       events: getSheetData(DB_USERS_ID, "Events"),
-      notifications: [], 
+      notifications: [],
       schedule: mySchedule,
       examSchedule: myExams
     }
@@ -755,108 +1146,108 @@ function getHeavyDashboardData(token) {
   }
   if (!dbConfig) dbConfig = DB_ACADEMIC_MAP["1"]["default"];
 
-  let allScores = [];
+  // ✅ Pre-populate ALL sheet tab names so dropdown always shows every month
+  const scoresByCategory = {};
+
   try {
     const ss = SpreadsheetApp.openById(dbConfig.scores);
     const sheets = ss.getSheets();
-    const METADATA_COLS = ['studentId', 'grade', 'semester', 'total', 'average', 'rank', 'index', 'class', 'section'];
 
+    // Columns to SKIP when building the subject score list
+    // Includes both English AND Khmer header names from your sheet
+    const METADATA_COLS = [
+      // English
+      'studentid', 'student_id', 'id', 'no', 'grade', 'semester', 'total', 'average',
+      'rank', 'index', 'class', 'section', 'name', 'gender', 'sex', 'note',
+      // Khmer — matches your actual sheet column headers
+      'ល.រ', 'អូរលេខ', 'អត្តលេខ', 'លេខសិស្ស', 'លេខ',
+      'គោត្តនាម និង នាម', 'គោត្តនាម', 'នាម', 'ភេទ',
+      'ចំណាត់ថ្នាក់', 'មធ្យមភាគ', 'ពិន្ទុសរុប', 'និទ្ទេស', 'ផ្សេងៗ', 'ចំណាំ'
+    ];
+
+    // Possible Khmer/English column names for Student ID (Column B in your sheet = អូរលេខ)
+    const ID_COL_NAMES = [
+      'studentid', 'student_id', 'id',
+      'អូរលេខ', 'អត្តលេខ', 'លេខសិស្ស', 'លេខ'
+    ];
+
+    // Possible Khmer/English column names to SKIP (metadata)
+    const GRADE_COL_NAMES = ['grade', 'ថ្នាក់', 'កម្រិតថ្នាក់'];
+    const CLASS_COL_NAMES = ['class', 'section', 'បន្ទប់', 'ផ្នែក'];
+
+    // STEP 1: Register ALL tab names first (empty array = no data yet for this student)
     sheets.forEach(sheet => {
-      const sheetName = sheet.getName();
+      const name = sheet.getName().trim();
+      if (name) scoresByCategory[name] = [];
+    });
+
+    // STEP 2: Fill in real scores where student data exists
+    sheets.forEach(sheet => {
+      const sheetName = sheet.getName().trim();
       const data = sheet.getDataRange().getValues();
       if (data.length < 2) return;
 
       const headers = data[0];
       const lowerHeaders = headers.map(h => String(h).toLowerCase().trim());
-      const idIdx = lowerHeaders.indexOf('studentid');
-      const gradeIdx = lowerHeaders.indexOf('grade');
-      
-      // PRIORITIZE CLASS OVER SECTION
-      const classIdx = lowerHeaders.indexOf('class');
-      const sectionIdx = lowerHeaders.indexOf('section');
 
-      if (idIdx === -1) return;
+      // Find Student ID column — supports both Khmer and English headers
+      let idIdx = -1;
+      for (let name of ID_COL_NAMES) {
+        const i = lowerHeaders.indexOf(name.toLowerCase());
+        if (i !== -1) { idIdx = i; break; }
+      }
+      // ✅ Fallback: if still not found, assume Column B (index 1) is the student ID
+      if (idIdx === -1) idIdx = 1;
 
-      const studentRows = data.slice(1).filter(r => String(r[idIdx]) === String(studentId));
+      // Find Grade column
+      let gradeIdx = -1;
+      for (let name of GRADE_COL_NAMES) {
+        const i = lowerHeaders.indexOf(name.toLowerCase());
+        if (i !== -1) { gradeIdx = i; break; }
+      }
+
+      // Find Class column
+      let classIdx = -1;
+      for (let name of CLASS_COL_NAMES) {
+        const i = lowerHeaders.indexOf(name.toLowerCase());
+        if (i !== -1) { classIdx = i; break; }
+      }
+
+      // Find rows that belong to this student (trim both sides to avoid space mismatch)
+      const studentRows = data.slice(1).filter(r =>
+        String(r[idIdx]).trim() === String(studentId).trim()
+      );
 
       studentRows.forEach(row => {
         let rowGrade = (gradeIdx !== -1 && row[gradeIdx]) ? row[gradeIdx] : profile.grade;
-        
-        // Grab the precise class (e.g. 10A)
-        let exactClass = '';
-        if (classIdx !== -1 && row[classIdx]) exactClass = String(row[classIdx]);
-        else if (sectionIdx !== -1 && row[sectionIdx]) exactClass = String(row[sectionIdx]);
+        let exactClass = (classIdx !== -1 && row[classIdx]) ? String(row[classIdx]) : (profile.class || '');
 
         headers.forEach((header, index) => {
           const headerLower = String(header).toLowerCase().trim();
-          if (!METADATA_COLS.some(meta => meta.toLowerCase() === headerLower) && header !== "") {
-            const score = row[index];
-            if (score !== "" && score != null) {
-              allScores.push({
-                category: sheetName,
-                course: header,
-                totalScore: score,
-                grade: String(rowGrade),
-                exactClass: exactClass, // Pass exact class to frontend
-                gradeLabel: calculateGrade(score)
-              });
-            }
-          }
+          // Skip metadata columns and empty headers
+          const isMeta = METADATA_COLS.some(m => m.toLowerCase() === headerLower);
+          if (isMeta || header === "" || header == null) return;
+
+          const score = row[index];
+          if (score === "" || score == null) return;
+
+          scoresByCategory[sheetName].push({
+            category: sheetName,
+            course: header,
+            totalScore: score,
+            grade: String(rowGrade),
+            exactClass: exactClass,
+            gradeLabel: calculateGrade(score)
+          });
         });
       });
     });
+
   } catch (e) {
     console.log("Error fetching scores: " + e.toString());
   }
 
-  const scoresByCategory = allScores.reduce((acc, curr) => {
-    const key = String(curr.category);
-    if (!acc[key]) acc[key] = [];
-    acc[key].push(curr);
-    return acc;
-  }, {});
-
   const mappedAttendance = getAllAttendanceRecords(studentId, dbConfig);
-  try {
-    const ssPerms = SpreadsheetApp.openById(DB_PERMS_ID);
-    const permSheet = ssPerms.getSheetByName("All of Permissions");
-
-    if (permSheet) {
-      const permData = permSheet.getDataRange().getValues();
-      const headers = permData[0].map(h => String(h).toLowerCase().trim());
-
-      const idIdx = headers.indexOf("studentid") !== -1 ? headers.indexOf("studentid") : 1;
-      const statusIdx = headers.indexOf("status") !== -1 ? headers.indexOf("status") : 6;
-      const subjectsIdx = headers.indexOf("subjects") !== -1 ? headers.indexOf("subjects") : 10;
-      const dateIdx = headers.indexOf("requestdate") !== -1 ? headers.indexOf("requestdate") : 3;
-
-      for (let i = 1; i < permData.length; i++) {
-        const row = permData[i];
-        if (String(row[idIdx]) === String(studentId) && String(row[statusIdx]).toLowerCase() === 'approved') {
-          const subjectsStr = row[subjectsIdx];
-
-          if (subjectsStr && subjectsStr !== "No classes" && subjectsStr !== "N/A") {
-            const splitSubjects = String(subjectsStr).split(',');
-            splitSubjects.forEach(subText => {
-              const cleanSubject = subText.trim();
-              if (cleanSubject) {
-                mappedAttendance.push({
-                  semester: "1",
-                  grade: profile.grade,
-                  exactClass: profile.class || "", // Default exact class
-                  course: cleanSubject,
-                  date: formatShortDate(row[dateIdx]),
-                  status: "Permission"
-                });
-              }
-            });
-          }
-        }
-      }
-    }
-  } catch (e) {
-    console.log("Error injecting permissions to attendance: " + e.toString());
-  }
 
   const attendanceBySem = mappedAttendance.reduce((acc, curr) => {
     if (!acc[curr.semester]) acc[curr.semester] = [];
@@ -979,6 +1370,14 @@ function getSheetDataFromObject(sheet) {
 
       headers.forEach((h, i) => {
         let val = row[i];
+
+        // ✅ Normalize englishName — support any column header spelling
+        if (['englishname', 'english_name', 'fullname', 'name', 'ឈ្មោះអង់គ្លេស'].includes(
+          String(h).toLowerCase().trim()
+        )) {
+          obj['englishName'] = val;
+        }
+
         // Handle IMAGE formula
         if (h === 'profileImgUrl') {
           const cellFormula = formulaRow ? formulaRow[i] : '';
@@ -1015,10 +1414,13 @@ function getAllAttendanceRecords(studentId, dbConfig) {
       const subjectIdx = headers.indexOf("subject");
       const dateIdx = headers.indexOf("date");
       const finalSubjectIdx = subjectIdx !== -1 ? subjectIdx : headers.indexOf("course");
-      
+
+      // --- ថែមការស្វែងរក Column "reason" ឬ "note" ត្រង់នេះ ---
+      const reasonIdx = headers.indexOf("reason") !== -1 ? headers.indexOf("reason") : headers.indexOf("note");
+
       const classIdx = headers.indexOf("class");
       const sectionIdx = headers.indexOf("section");
-      const finalClassIdx = classIdx !== -1 ? classIdx : sectionIdx; // Prefer class over section
+      const finalClassIdx = classIdx !== -1 ? classIdx : sectionIdx;
 
       const finalIdIdx = idIdx !== -1 ? idIdx : 0;
       if (statusIdx === -1) return;
@@ -1031,6 +1433,10 @@ function getAllAttendanceRecords(studentId, dbConfig) {
             grade: String(row[gradeIdx] || ""),
             exactClass: finalClassIdx !== -1 ? String(row[finalClassIdx]) : "",
             course: finalSubjectIdx !== -1 ? row[finalSubjectIdx] : "General",
+            
+            // --- បញ្ជូន Reason មកកាន់ App ---
+            reason: reasonIdx !== -1 ? row[reasonIdx] : "", 
+            
             date: formatShortDate(dateIdx !== -1 ? row[dateIdx] : new Date()),
             status: row[statusIdx]
           });
@@ -1150,6 +1556,49 @@ function updateProfileField(p) {
     return { success: false, message: "User not found" };
   } catch (e) {
     return { success: false, message: e.toString() };
+  }
+}
+
+function uploadImage(p) {
+  try {
+    const studentId = verifySession(p.token);
+    if (!studentId) return { success: false, message: "Invalid Session." };
+
+    // 1. Decode base64 and create a blob
+    const blob = Utilities.newBlob(
+      Utilities.base64Decode(p.fileData),
+      p.mimeType,
+      p.fileName
+    );
+
+    // 2. Save to Drive root (no folder — avoids permission issues)
+    const file = DriveApp.createFile(blob);
+    file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+
+    const fileId = file.getId();
+    const newImageUrl = `https://drive.google.com/thumbnail?id=${fileId}&sz=w400`;
+
+    // 3. Save the new URL to the Users sheet
+    const ss = SpreadsheetApp.openById(DB_USERS_ID);
+    const sheet = ss.getSheetByName("Users");
+    const data = sheet.getDataRange().getValues();
+    const headers = data[0];
+    const idIdx = headers.indexOf('studentId');
+    const imgIdx = headers.indexOf('profileImgUrl');
+
+    if (imgIdx === -1) return { success: false, message: "profileImgUrl column not found in Users sheet." };
+
+    for (let i = 1; i < data.length; i++) {
+      if (String(data[i][idIdx]).trim() === String(studentId).trim()) {
+        sheet.getRange(i + 1, imgIdx + 1).setValue(newImageUrl);
+        return { success: true, newImageUrl: newImageUrl };
+      }
+    }
+
+    return { success: false, message: "User not found in sheet." };
+
+  } catch (e) {
+    return { success: false, message: "Upload failed: " + e.toString() };
   }
 }
 
@@ -1348,5 +1797,69 @@ function adminManageExam(payload) {
     return { success: false, message: "Error: " + e.toString() };
   } finally {
     LOCK.releaseLock();
+  }
+}
+// ==========================================
+// --- NEW: SYNC PERMISSION TO ATTENDANCE ---
+// ==========================================
+function syncPermissionToAttendance(studentId, requestDate, reasonStr, generation) {
+  try {
+    const profile = getStudentProfile(studentId);
+    if (!profile) return;
+
+    const genKey = String(generation || profile.generation).trim();
+    const gradeKey = String(profile.grade).trim();
+
+    let dbId = "";
+    if (DB_ACADEMIC_MAP[genKey]) {
+      if (DB_ACADEMIC_MAP[genKey][gradeKey]) dbId = DB_ACADEMIC_MAP[genKey][gradeKey].attendance;
+      else if (DB_ACADEMIC_MAP[genKey]["default"]) dbId = DB_ACADEMIC_MAP[genKey]["default"].attendance;
+    }
+
+    if (!dbId || dbId.includes("PASTE_")) return;
+
+    const ss = SpreadsheetApp.openById(dbId);
+    let sheet = ss.getSheetByName("All Attendance") || ss.getSheetByName("Sheet1") || ss.getSheets()[0];
+
+    // បញ្ចូលទិន្នន័យ
+    if (reasonStr && reasonStr !== "") {
+      const headers = sheet.getDataRange().getValues()[0].map(h => String(h).toLowerCase().trim());
+      let newRow = new Array(headers.length > 0 ? headers.length : 7).fill("");
+
+      const idIdx = headers.indexOf("studentid");
+      const nameIdx = headers.indexOf("name") !== -1 ? headers.indexOf("name") : headers.indexOf("studentname");
+      const dateIdx = headers.indexOf("date");
+      const subjIdx = headers.indexOf("subject") !== -1 ? headers.indexOf("subject") : headers.indexOf("course");
+      const reasonIdx = headers.indexOf("reason") !== -1 ? headers.indexOf("reason") : headers.indexOf("note");
+      const statusIdx = headers.indexOf("status");
+      const gradeColIdx = headers.indexOf("grade");
+      const classColIdx = headers.indexOf("class") !== -1 ? headers.indexOf("class") : headers.indexOf("section");
+      const semIdx = headers.indexOf("semester");
+
+      if (headers.length > 0) {
+        if (idIdx !== -1) newRow[idIdx] = studentId;
+        if (nameIdx !== -1) newRow[nameIdx] = profile.englishName || "";
+        if (dateIdx !== -1) newRow[dateIdx] = requestDate;
+        
+        // បញ្ចូល "មូលហេតុ" ទៅក្នុង Column Reason ឬ Note. បើអត់មានទេ ដាក់ក្នុង Column Subject ជំនួស
+        if (reasonIdx !== -1) {
+            newRow[reasonIdx] = reasonStr;
+            if (subjIdx !== -1) newRow[subjIdx] = "N/A";
+        } else if (subjIdx !== -1) {
+            newRow[subjIdx] = reasonStr; 
+        }
+
+        if (statusIdx !== -1) newRow[statusIdx] = "Permission"; 
+        if (gradeColIdx !== -1) newRow[gradeColIdx] = profile.grade;
+        if (classColIdx !== -1) newRow[classColIdx] = profile.class || "";
+        if (semIdx !== -1) newRow[semIdx] = "1";
+      } else {
+        newRow = [studentId, "1", profile.grade, profile.class, reasonStr, requestDate, "Permission"];
+      }
+
+      sheet.appendRow(newRow); 
+    }
+  } catch (e) {
+    console.log("Error syncing to attendance: " + e.toString());
   }
 }

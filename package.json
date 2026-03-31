@@ -1,0 +1,15 @@
+{
+  "name": "student-portal-v1",
+  "version": "1.0.0",
+  "main": "admin-script.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "vite": "^8.0.3"
+  }
+}

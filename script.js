@@ -24,7 +24,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
     checkAppVersion();
     // --- CONFIGURATION ---
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyU-gBFaLZmSXRVd8VhIsRo8-3dKd1L6PbnXdXqZxJtWrJM1tGI7J5hcXWBL3IlfDnG/exec';
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxpeIu-fjcJa2Xy-hMyhSR72ofeR_DWsCp7xJyT1hm-umZWe77UfcdgtNW1lYHqL93v_A/exec';
     const ALL_SEMESTERS = ['1', '2'];
     let currentSemester = ALL_SEMESTERS[ALL_SEMESTERS.length - 1];
     let lastFocusedElement = null;

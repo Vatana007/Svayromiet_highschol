@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
     const ADMIN_VERSION = '4.0.0'; // Glassmorphism Version
-    const API_URL = "https://script.google.com/macros/s/AKfycbyU-gBFaLZmSXRVd8VhIsRo8-3dKd1L6PbnXdXqZxJtWrJM1tGI7J5hcXWBL3IlfDnG/exec";
+    const API_URL = "https://script.google.com/macros/s/AKfycbxpeIu-fjcJa2Xy-hMyhSR72ofeR_DWsCp7xJyT1hm-umZWe77UfcdgtNW1lYHqL93v_A/exec";
     let cache = { students: null, schedule: null, exams: null, reqs: null, announcements: null, feedback: null };
     let debounceTimer;
 
