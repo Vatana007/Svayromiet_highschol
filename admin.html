@@ -5,6 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Admin | Glassmorphism</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="shortcut icon" href="images/high_logo.png" type="image/x-icon">
     <!-- Modern Font -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -488,7 +490,16 @@
         </div>
     </div>
 
-    <script type="module" src="admin-script.js"></script>
+    <script src="admin-script.js"></script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(reg => console.log('Service Worker Registered Successfully!', reg))
+                    .catch(err => console.error('Service Worker Registration Failed!', err));
+            });
+        }
+    </script>
 </body>
 
 </html>

@@ -14,7 +14,7 @@ function testDriveAccess() {
 // ==========================================
 
 const ADMIN_EMAIL = "vuthvatana09@gmail.com";
-const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxpeIu-fjcJa2Xy-hMyhSR72ofeR_DWsCp7xJyT1hm-umZWe77UfcdgtNW1lYHqL93v_A/exec";
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyU-gBFaLZmSXRVd8VhIsRo8-3dKd1L6PbnXdXqZxJtWrJM1tGI7J5hcXWBL3IlfDnG/exec";
 
 // STATIC DATABASES
 const DB_USERS_ID = "1-KZ1XMbSP6f-MXbLdFdf-dxeZj2IKPfB6jRg7cfkqdk";
@@ -1213,6 +1213,18 @@ function getHeavyDashboardData(token) {
         if (i !== -1) { classIdx = i; break; }
       }
 
+      // Find Overall Grade (និទ្ទេស) column
+      let gradeLetterIdx = -1;
+      const GRADE_LETTER_NAMES = ['និទ្ទេស', 'gradeletter', 'grade letter'];
+      for (let name of GRADE_LETTER_NAMES) {
+        const i = lowerHeaders.indexOf(name.toLowerCase());
+        if (i !== -1) { gradeLetterIdx = i; break; }
+      }
+      // បើរកតាមឈ្មោះ Header មិនឃើញ យក Column T (Index 19) ជាគោល
+      if (gradeLetterIdx === -1 && headers.length > 19) {
+          gradeLetterIdx = 19;
+      }
+
       // Find rows that belong to this student (trim both sides to avoid space mismatch)
       const studentRows = data.slice(1).filter(r =>
         String(r[idIdx]).trim() === String(studentId).trim()
@@ -1221,6 +1233,9 @@ function getHeavyDashboardData(token) {
       studentRows.forEach(row => {
         let rowGrade = (gradeIdx !== -1 && row[gradeIdx]) ? row[gradeIdx] : profile.grade;
         let exactClass = (classIdx !== -1 && row[classIdx]) ? String(row[classIdx]) : (profile.class || '');
+        
+        // ទាញយកនិទ្ទេសរួមពី Column T
+        let overallGradeLetter = gradeLetterIdx !== -1 ? row[gradeLetterIdx] : '';
 
         headers.forEach((header, index) => {
           const headerLower = String(header).toLowerCase().trim();
@@ -1237,7 +1252,8 @@ function getHeavyDashboardData(token) {
             totalScore: score,
             grade: String(rowGrade),
             exactClass: exactClass,
-            gradeLabel: calculateGrade(score)
+            gradeLabel: calculateGrade(score),
+            overallGrade: overallGradeLetter // បន្ថែមនិទ្ទេសយកទៅឱ្យ Frontend
           });
         });
       });

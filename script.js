@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', function () {
-    const APP_VERSION = '1.0.0';
+    const APP_VERSION = '1.0.1';
 
     function checkAppVersion() {
         const storedVersion = localStorage.getItem('app_version');
@@ -24,7 +24,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
     checkAppVersion();
     // --- CONFIGURATION ---
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxpeIu-fjcJa2Xy-hMyhSR72ofeR_DWsCp7xJyT1hm-umZWe77UfcdgtNW1lYHqL93v_A/exec';
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyU-gBFaLZmSXRVd8VhIsRo8-3dKd1L6PbnXdXqZxJtWrJM1tGI7J5hcXWBL3IlfDnG/exec';
     const ALL_SEMESTERS = ['1', '2'];
     let currentSemester = ALL_SEMESTERS[ALL_SEMESTERS.length - 1];
     let lastFocusedElement = null;
@@ -437,8 +437,8 @@ document.addEventListener('DOMContentLoaded', function () {
         if (ui.dashboard && ui.mainContent) {
             const ptrIndicator = document.createElement('div');
             ptrIndicator.id = 'pull-to-refresh-indicator';
+            ptrIndicator.style.pointerEvents = 'none'; // <--- បន្ថែមបន្ទាត់នេះ
             ptrIndicator.innerHTML = '<div class="spinner"></div>';
-            ui.dashboard.insertBefore(ptrIndicator, ui.mainContent);
         }
     }
 
@@ -827,6 +827,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // --- API & DATA HANDLING ---
     async function refreshData(showToastNotification = false) {
+        if (!navigator.onLine) {
+            showToast("អ្នកកំពុងប្រើប្រាស់ Offline Mode (គ្មានអ៊ីនធឺណិត)", "error");
+            return;
+        }
         try {
             const token = localStorage.getItem('token');
             if (!token) throw new Error("Not logged in");
@@ -874,13 +878,19 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     async function fetchInitialDashboardData(token) {
-        dataCache.isFetchingInitialData = true; // Mark as fetching
+        if (!navigator.onLine) {
+            console.log("Offline mode: Using cached Initial Data.");
+            dataCache.isInitialDataLoaded = true;
+            return { success: true };
+        }
+
+        dataCache.isFetchingInitialData = true;
         try {
             const response = await fetch(`${SCRIPT_URL}?action=getInitialDashboardData&token=${token}`);
             if (!response.ok) throw new Error(`Network response was not ok: ${response.statusText}`);
             const result = await response.json();
 
-            dataCache.isFetchingInitialData = false; // Mark done
+            dataCache.isFetchingInitialData = false;
 
             if (result.success) {
                 dataCache.profile = result.data.profile;
@@ -904,23 +914,30 @@ document.addEventListener('DOMContentLoaded', function () {
             throw new Error(result.message || 'Failed to load profile data.');
         } catch (error) {
             console.error('Fetch Initial Data Error:', error);
-            dataCache.isFetchingInitialData = false; // Cancel loading on fail
-            rerenderCurrentSection(); // Force skeleton to disappear
+            dataCache.isFetchingInitialData = false;
+
+            // ដំណោះស្រាយ៖ ប្រាប់ប្រព័ន្ធកុំឱ្យ Loading បន្តទៀត (ទោះជា Error ក៏ដោយ)
+            dataCache.isInitialDataLoaded = true;
+
             return { success: false, message: error.message };
         }
     }
 
     async function fetchHeavyDashboardData(token) {
-        if (dataCache.isHeavyDataLoaded) return { success: true };
+        if (!navigator.onLine) {
+            console.log("Offline mode: Using cached Heavy Data.");
+            dataCache.isHeavyDataLoaded = true;
+            return { success: true };
+        }
 
-        dataCache.isFetchingHeavyData = true; // Mark as fetching
+        dataCache.isFetchingHeavyData = true;
 
         try {
             const response = await fetch(`${SCRIPT_URL}?action=getHeavyDashboardData&token=${token}`);
             if (!response.ok) throw new Error(`Network response was not ok: ${response.statusText}`);
             const result = await response.json();
 
-            dataCache.isFetchingHeavyData = false; // Mark done
+            dataCache.isFetchingHeavyData = false;
 
             if (result.success) {
                 dataCache.scores = result.data.scores || {};
@@ -931,7 +948,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 dataCache.isHeavyDataLoaded = true;
 
+                // រក្សាទុកទិន្នន័យចូលក្នុង Memory ទូរស័ព្ទ
                 localStorage.setItem('studentSchedule', JSON.stringify(result.data.schedule || []));
+                localStorage.setItem('studentAttendance', JSON.stringify(result.data.attendance || {}));
+                localStorage.setItem('studentScores', JSON.stringify(result.data.scores || {}));
+                localStorage.setItem('studentExamSchedule', JSON.stringify(result.data.examSchedule || []));
+
                 return { success: true };
             }
 
@@ -944,19 +966,14 @@ document.addEventListener('DOMContentLoaded', function () {
             throw new Error(result.message || 'Failed to load detailed records.');
         } catch (error) {
             console.error('Fetch Heavy Data Error:', error);
-            dataCache.isFetchingHeavyData = false; // Cancel loading on fail
+            dataCache.isFetchingHeavyData = false;
 
-            rerenderCurrentSection(); // Force skeleton to disappear
+            // ដំណោះស្រាយ៖ ប្រាប់ប្រព័ន្ធថាទាញយកចប់ហើយ (ទោះជា Error ក៏ដោយ)
+            dataCache.isHeavyDataLoaded = true;
 
-            const retryFunc = () => {
-                dataCache.isHeavyDataLoaded = false;
-                fetchHeavyDashboardData(token).then(rerenderCurrentSection);
-            };
+            // បង្ខំឱ្យវាគូរអេក្រង់ឡើងវិញភ្លាមៗ ដើម្បីលុប Skeleton Loading ចេញ
+            rerenderCurrentSection();
 
-            renderErrorState(ui.scoresTableBody, retryFunc);
-            renderErrorState(ui.attendanceListContainer, retryFunc);
-            renderErrorState(ui.classScheduleView, retryFunc);
-            renderErrorState(ui.examListContainer, retryFunc);
             return { success: false, message: error.message };
         }
     }
@@ -990,26 +1007,27 @@ document.addEventListener('DOMContentLoaded', function () {
         showPage('dashboard');
         const token = localStorage.getItem('token');
 
+        // បញ្ជាឱ្យបើក Tab Home និងគូរ Profile ភ្លាមៗ ដើម្បីកុំឱ្យចេញអេក្រង់ស
+        handleNavigation(window.location.hash || '#home');
+        renderProfile();
+
         // 1. LOAD CACHE (Synchronous - Instant)
         const cachedProfile = localStorage.getItem('studentProfile');
         const cachedSchedule = localStorage.getItem('studentSchedule');
+        const cachedAttendance = localStorage.getItem('studentAttendance');
+        const cachedScores = localStorage.getItem('studentScores');
+        const cachedExamSchedule = localStorage.getItem('studentExamSchedule');
 
-        if (cachedProfile) {
-            try { dataCache.profile = JSON.parse(cachedProfile); } catch (e) { }
-        }
-        if (cachedSchedule) {
-            try { dataCache.schedule = JSON.parse(cachedSchedule); } catch (e) { }
-        }
+        if (cachedProfile) try { dataCache.profile = JSON.parse(cachedProfile); } catch (e) { }
+        if (cachedSchedule) try { dataCache.schedule = JSON.parse(cachedSchedule); } catch (e) { }
+        if (cachedAttendance) try { dataCache.attendance = JSON.parse(cachedAttendance); } catch (e) { }
+        if (cachedScores) try { dataCache.scores = JSON.parse(cachedScores); } catch (e) { }
+        if (cachedExamSchedule) try { dataCache.examSchedule = JSON.parse(cachedExamSchedule); } catch (e) { }
 
-        // 2. RENDER IMMEDIATELY (First Paint)
-        if (dataCache.profile) {
-            renderProfile();
-            renderHome();
-            const currentHash = window.location.hash || '#home';
-            handleNavigation(currentHash);
-            if (dataCache.schedule) {
-                renderSchedule();
-            }
+        // ប្រាប់ប្រព័ន្ធថាមានទិន្នន័យរួចហើយ មិនបាច់បង្ហាញ Skeleton (Loading) ទេ
+        if (cachedSchedule && cachedAttendance) {
+            dataCache.isHeavyDataLoaded = true;
+            dataCache.isInitialDataLoaded = true;
         }
 
         // 3. BACKGROUND REFRESH
@@ -1018,10 +1036,6 @@ document.addEventListener('DOMContentLoaded', function () {
             if (isReload || !dataCache.isInitialDataLoaded) {
                 fetchInitialDashboardData(token).then((res) => {
                     if (res.success) {
-                        if (!cachedProfile) {
-                            handleNavigation(window.location.hash || '#home');
-                            renderProfile();
-                        }
                         rerenderCurrentSection(); // <--- This populates News/Events
                     } else if (!cachedProfile) {
                         handleLogout();
@@ -1126,6 +1140,11 @@ document.addEventListener('DOMContentLoaded', function () {
         localStorage.removeItem('token');
         localStorage.removeItem('studentProfile');
         localStorage.removeItem('studentSchedule');
+        // បន្ថែមការលុប Cache ដែលយើងទើបបង្កើតថ្មី
+        localStorage.removeItem('studentAttendance');
+        localStorage.removeItem('studentScores');
+        localStorage.removeItem('studentExamSchedule');
+        localStorage.removeItem('studentPermissionHistory');
 
         window.location.href = window.location.pathname;
     }
@@ -1224,10 +1243,19 @@ document.addEventListener('DOMContentLoaded', function () {
         }, '<div class="card"><p>You have no notifications.</p></div>');
     }
 
-    async function showNotificationsPage() {
-        if (ui.homeSection.dataset.isAnimating) return;
+    async function showNotificationsPage(e) {
+        if (e) e.preventDefault();
+        
+        // លុបចោលការគាំង Animation មុននឹងចាប់ផ្ដើមថ្មី
+        delete ui.homeSection.dataset.isAnimating; 
+        
         ui.homeSection.dataset.isAnimating = 'true';
         lastFocusedElement = document.activeElement;
+
+        // 🟢 បន្ថែមកូដនេះ ដើម្បីលាក់ Bottom Navigation Bar
+        const bottomNav = document.querySelector('.bottom-nav');
+        if (bottomNav) bottomNav.style.display = 'none';
+
         renderNotifications();
         onAnimationEnd(ui.notificationsView, () => {
             ui.homeMainView.classList.add('hidden');
@@ -1260,6 +1288,11 @@ document.addEventListener('DOMContentLoaded', function () {
     function hideNotificationsPage() {
         if (ui.notificationsView.classList.contains('hidden') || ui.homeSection.dataset.isAnimating) return;
         ui.homeSection.dataset.isAnimating = 'true';
+
+        // 🟢 បន្ថែមកូដនេះ ដើម្បីបង្ហាញ Bottom Navigation Bar មកវិញ
+        const bottomNav = document.querySelector('.bottom-nav');
+        if (bottomNav) bottomNav.style.display = 'flex'; // (បើចៃដន្យវាអត់ចេញ រាងខូចទម្រង់ សូមដូរពាក្យ 'flex' ទៅជា 'block' វិញ)
+
         onAnimationEnd(ui.homeMainView, () => {
             ui.notificationsView.classList.add('hidden');
             ui.notificationsView.classList.remove('slide-out-to-right');
@@ -1899,11 +1932,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 renderLoadingSkeleton(container);
             } else {
                 container.innerHTML = `
-            <div class="empty-state-schedule" style="padding:3rem 1rem; text-align:center;">
-                <i class='bx bx-bar-chart-alt-2' style="font-size:3rem; color:var(--border-color);"></i>
-                <p style="margin-top:0.75rem; color:var(--secondary-text);">
-                    ${txtNoResult} ${formatNumber(selectedGrade)} - ${getDisplayLabel(selectedCategory)}.
-                </p>
+            <div class="empty-state-schedule">
+                <i class='bx bx-bar-chart-alt-2'></i>
+                <p>${txtNoResult} ${formatNumber(selectedGrade)} - ${getDisplayLabel(selectedCategory)}.</p>
             </div>`;
             }
             const cgpaEl = document.getElementById('cgpa-value');
@@ -1915,7 +1946,7 @@ document.addEventListener('DOMContentLoaded', function () {
         let totalScore = 0;
         let count = 0;
 
-        let cardsHTML = `<div style="display:flex; flex-direction:column; gap:10px; margin-top:1rem; padding:0 2px;">`;
+        let cardsHTML = `<div class="subject-cards-result">`;
 
         filteredScores.forEach((item) => {
             const score = parseFloat(item.totalScore);
@@ -1928,64 +1959,30 @@ document.addEventListener('DOMContentLoaded', function () {
             const barWidth = Math.min((displayScore / 100) * 100, 100).toFixed(1);
 
             cardsHTML += `
-        <div style="
-            background: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 16px;
-            padding: 14px 16px;
-            display: flex;
-            align-items: center;
-            gap: 14px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-            transition: transform 0.15s ease, box-shadow 0.15s ease;
-            cursor: pointer;
-        "
-        onclick="showResultDetail('${item.course}')"
-        onmouseenter="this.style.transform='translateY(-2px)';this.style.boxShadow='0 6px 20px rgba(0,0,0,0.09)'"
-        onmouseleave="this.style.transform='translateY(0)';this.style.boxShadow='0 2px 8px rgba(0,0,0,0.04)'">
-
-            <!-- Subject Icon -->
-            <div style="
-                width:46px; height:46px; border-radius:13px; flex-shrink:0;
-                background:${subjectColor}1a;
-                display:flex; align-items:center; justify-content:center;
-            ">
-                <i class="${subjectIcon}" style="font-size:1.35rem; color:${subjectColor};"></i>
-            </div>
-
-            <!-- Subject Name + Score Bar -->
-            <div style="flex:1; min-width:0;">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:7px;">
-                    <span style="
-                        font-weight:700; font-size:0.93rem;
-                        color:var(--primary-text);
-                        white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
-                        max-width:62%;
-                    ">${item.course}</span>
-                    <span style="
-                        font-weight:800; font-size:0.88rem;
-                        color:${color};
-                        background:${color}18;
-                        padding:3px 11px; border-radius:20px;
-                        letter-spacing:0.3px;
-                    ">${gradeLetter}</span>
-                </div>
-                <div style="display:flex; align-items:center; gap:10px;">
-                    <div style="flex:1; background:var(--border-color); border-radius:99px; height:6px; overflow:hidden;">
-                        <div style="
-                            width:${barWidth}%;
-                            height:100%;
-                            border-radius:99px;
-                            background: linear-gradient(90deg, ${color}99, ${color});
-                            transition: width 0.7s cubic-bezier(.4,0,.2,1);
-                        "></div>
+                <div class="card-result-subject"
+                onclick="showResultDetail('${item.course}')"
+                onmouseenter="this.style.transform='translateY(-2px)';this.style.boxShadow='0 6px 20px rgba(0,0,0,0.09)'"
+                onmouseleave="this.style.transform='translateY(0)';this.style.boxShadow='0 2px 8px rgba(0,0,0,0.04)'">
+                    <!-- Subject Icon -->
+                    <div class="subject-icon-result" style="background:${subjectColor}1a;">
+                        <i class="${subjectIcon}" style="color:${subjectColor};"></i>
                     </div>
-                    <span style="font-size:0.88rem; font-weight:700; color:var(--secondary-text); flex-shrink:0; min-width:28px; text-align:right;">
-                        ${validScore ? formatNumber(displayScore) : '-'}
-                    </span>
+
+                    <!-- Subject Name + Score Bar -->
+                    <div class="subject-details-result">
+                        <div class="subject-info-result">
+                            <span class="subject-name-result">${item.course}</span>
+                            <span class="grade-letter-result" style="color:${color};background:${color}18;">${gradeLetter}</span>
+                        </div>
+                        <div class="score-bar-result">
+                            <div class="score-bar-rate-result">
+                                <div class="score-bar-fill-result" style="width:${barWidth}%;background: linear-gradient(90deg, ${color}99, ${color});"></div>
+                            </div>
+                            <span class="score-value-result">${validScore ? formatNumber(displayScore) : '-'}</span>
+                        </div>
+                    </div>
                 </div>
-            </div>
-        </div>`;
+            `;
 
             if (validScore) {
                 totalScore += score;
@@ -1998,86 +1995,58 @@ document.addEventListener('DOMContentLoaded', function () {
         // ─── SUMMARY CARD: Total Score | Average | និទ្ទេស ─────────────────────
         const avg = count > 0 ? (totalScore / count).toFixed(2) : 0;
 
-        let totalGradeLetter = 'F';
-        if (avg >= 90) totalGradeLetter = 'A';
-        else if (avg >= 80) totalGradeLetter = 'B';
-        else if (avg >= 70) totalGradeLetter = 'C';
-        else if (avg >= 60) totalGradeLetter = 'D';
-        else if (avg >= 50) totalGradeLetter = 'E';
+        // ទាញយក "និទ្ទេស" ដោយផ្ទាល់ពី Column T ដែលបញ្ជូនមកពី Google Sheet
+        let totalGradeLetter = '-';
+        if (filteredScores.length > 0 && filteredScores[0].overallGrade) {
+            totalGradeLetter = filteredScores[0].overallGrade;
+        } else {
+            // Backup: ប្រសិនបើក្នុង Sheet អត់មានទិន្នន័យនិទ្ទេសទេ ឱ្យវាគណនាដោយស្វ័យប្រវត្តិជំនួស
+            if (avg >= 90) totalGradeLetter = 'A';
+            else if (avg >= 80) totalGradeLetter = 'B';
+            else if (avg >= 70) totalGradeLetter = 'C';
+            else if (avg >= 60) totalGradeLetter = 'D';
+            else if (avg >= 50) totalGradeLetter = 'E';
+            else totalGradeLetter = 'F';
+        }
 
         const avgColor = getGradeColor(totalGradeLetter);
 
         cardsHTML += `
-    <div style="
-        margin-top: 16px;
-        border-radius: 18px;
-        overflow: hidden;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.07);
-        border: 1px solid var(--border-color);
-    ">
-        <!-- Header bar -->
-        <div style="
-            background: linear-gradient(135deg, var(--primary-color) 0%, #a78bfa 100%);
-            padding: 10px 20px;
-            text-align: center;
-            font-size: 0.78rem;
-            font-weight: 600;
-            letter-spacing: 0.8px;
-        ">សង្ខេបលទ្ធផល · SUMMARY</div>
+            <div class="summary-card-result">
+                <!-- Header bar -->
+                <div class="summary-header-result">សង្ខេបលទ្ធផល · SUMMARY</div>
 
-        <!-- Three stat columns -->
-        <div style="
-            display: grid;
-            grid-template-columns: 1fr 1px 1fr 1px 1fr;
-            background: var(--card-bg);
-        ">
-            <!-- Total Score -->
-            <div style="padding: 18px 12px; text-align: center;">
-                <div style="font-size:0.72rem; color:var(--secondary-text); margin-bottom:6px; letter-spacing:0.4px;">
-                    ពិន្ទុសរុប<br><span style="opacity:0.7;">Total Score</span>
-                </div>
-                <div style="font-size:1.75rem; font-weight:800; color:var(--primary-color); line-height:1;">
-                    ${formatNumber(Math.round(totalScore))}
-                </div>
-            </div>
+                <!-- Three stat columns -->
+                <div class="summary-grid-total-result">
+                    <!-- Total Score -->
+                    <div class="total-score-result-container">
+                        <div class="total-score-result-title">ពិន្ទុសរុប<br><span>Total Score</span></div>
+                        <div class="total-score-result-value">${formatNumber(Math.round(totalScore))}</div>
+                    </div>
 
-            <!-- Divider -->
-            <div style="background: var(--border-color);"></div>
+                    <!-- Divider -->
+                    <div style="background: var(--border-color);"></div>
 
-            <!-- Average -->
-            <div style="padding: 18px 12px; text-align: center;">
-                <div style="font-size:0.72rem; color:var(--secondary-text); margin-bottom:6px; letter-spacing:0.4px;">
-                    មធ្យមភាគ<br><span style="opacity:0.7;">Average</span>
-                </div>
-                <div style="font-size:1.75rem; font-weight:800; color:var(--primary-color); line-height:1;">
-                    ${formatNumber(avg)}
+                    <!-- Average -->
+                    <div class="average-result-container">
+                        <div class="average-title-letter" style="">មធ្យមភាគ<br><span>Average</span></div>
+                        <div class="average-value">${formatNumber(avg)}</div>
+                    </div>
+
+                    <!-- Divider -->
+                    <div style="background: var(--border-color);"></div>
+
+                    <!-- និទ្ទេស / Grade -->
+                    <div class="grade-result-container">
+                        <div class="grade-title-letter">និទ្ទេស<br><span>Grade</span></div>
+                        <div class="grade-letter"style="color:${avgColor};">${totalGradeLetter}</div>
+                    </div>
                 </div>
             </div>
-
-            <!-- Divider -->
-            <div style="background: var(--border-color);"></div>
-
-            <!-- និទ្ទេស / Grade -->
-            <div style="padding: 18px 12px; text-align: center;">
-                <div style="font-size:0.72rem; color:var(--secondary-text); margin-bottom:6px; letter-spacing:0.4px;">
-                    និទ្ទេស<br><span style="opacity:0.7;">Grade</span>
-                </div>
-                <div style="
-                    display:inline-flex; align-items:center; justify-content:center;
-                    width:42px; height:42px; border-radius:50%;
-                    background:${avgColor}18;
-                    border:2px solid ${avgColor};
-                    font-size:1.25rem; font-weight:800;
-                    color:${avgColor};
-                    line-height:1;
-                ">${totalGradeLetter}</div>
-            </div>
-        </div>
-    </div>`;
+        `;
 
         // ─── RENDER ───────────────────────────────────────────────────────────
         container.innerHTML = cardsHTML;
-
         // ─── UPDATE GPA CIRCLE AT TOP ─────────────────────────────────────────
         const cgpaEl = document.getElementById('cgpa-value');
         if (cgpaEl) cgpaEl.textContent = formatNumber(avg);
@@ -2649,8 +2618,22 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function transitionProfilePages(fromPage, toPage, direction = 'forward') {
+        // 🟢 ១. ការពារបញ្ហាគាំងជាប់ Animation
+        delete ui.profileSection.dataset.isAnimating;
+
         if (ui.profileSection.dataset.isAnimating) return;
         ui.profileSection.dataset.isAnimating = 'true';
+
+        // 🟢 ២. លាក់ ឬបង្ហាញ Menu ខាងក្រោមដោយស្វ័យប្រវត្តិ
+        const bottomNav = document.querySelector('.bottom-nav');
+        if (bottomNav) {
+            if (toPage.id === 'profile-main-view') {
+                bottomNav.style.display = 'flex'; // បង្ហាញវិញពេលត្រឡប់មកក្រៅ (Back)
+            } else {
+                bottomNav.style.display = 'none'; // លាក់ពេលចូលទៅមើលខាងក្នុង
+            }
+        }
+
         const [outClass, inClass] = direction === 'forward'
             ? ['slide-out-to-left', 'slide-in-from-right']
             : ['slide-out-to-right', 'slide-in-from-left'];
@@ -2697,6 +2680,10 @@ document.addEventListener('DOMContentLoaded', function () {
             ui.securityView.classList.add('hidden');
             if (ui.digitalIdView) ui.digitalIdView.classList.add('hidden');
             if (ui.appearanceView) ui.appearanceView.classList.add('hidden');
+
+            // 🟢 ៣. បង្ហាញ Menu មកវិញនៅពេល Reset Tab
+            const bottomNav = document.querySelector('.bottom-nav');
+            if (bottomNav) bottomNav.style.display = 'flex';
         }
         profileNavHistory = [];
     }
@@ -2819,8 +2806,17 @@ document.addEventListener('DOMContentLoaded', function () {
             historyListContainer.style.overflow = '';
         }
         const activeSubPage = ui.attendanceSection.querySelector('.sub-page:not(.hidden)');
+        
+        // 🟢 ៣. ដោះស្រាយបញ្ហាគាំង
+        delete ui.attendanceSection.dataset.isAnimating;
+
         if (!activeSubPage || ui.attendanceSection.dataset.isAnimating) return;
         ui.attendanceSection.dataset.isAnimating = 'true';
+
+        // 🟢 ៤. បង្ហាញ Menu ខាងក្រោមមកវិញ
+        const bottomNav = document.querySelector('.bottom-nav');
+        if (bottomNav) bottomNav.style.display = 'flex';
+
         onAnimationEnd(ui.attendanceMainView, () => {
             activeSubPage.classList.add('hidden');
             activeSubPage.classList.remove('slide-out-to-right');
@@ -2877,9 +2873,16 @@ document.addEventListener('DOMContentLoaded', function () {
         const isAlreadyVisible = !ui.permissionHistoryView.classList.contains('hidden');
 
         if (!isAlreadyVisible) {
+            // 🟢 ១. ដោះស្រាយបញ្ហាគាំងមិនឱ្យចុច
+            delete ui.attendanceSection.dataset.isAnimating;
+
             if (ui.attendanceSection.dataset.isAnimating) return;
             ui.attendanceSection.dataset.isAnimating = 'true';
             lastFocusedElement = document.activeElement;
+
+            // 🟢 ២. លាក់ Menu ខាងក្រោម (Navbar)
+            const bottomNav = document.querySelector('.bottom-nav');
+            if (bottomNav) bottomNav.style.display = 'none';
 
             onAnimationEnd(ui.permissionHistoryView, () => {
                 ui.attendanceMainView.classList.add('hidden');
@@ -2904,13 +2907,28 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         try {
+            // 1. ដំណើរការពេល Offline (គ្មានអ៊ីនធឺណិត)
+            if (!navigator.onLine) {
+                const cachedHistory = localStorage.getItem('studentPermissionHistory');
+                if (cachedHistory) {
+                    dataCache.permissionHistory = JSON.parse(cachedHistory);
+                    renderPermissionHistoryList();
+                } else {
+                    historyListContainer.style.height = 'auto';
+                    historyListContainer.innerHTML = `<div class="card"><p>Offline Mode: មិនមានប្រវត្តិសុំច្បាប់ចាស់ៗក្នុងប្រព័ន្ធទេ។</p></div>`;
+                }
+                return; // បញ្ឈប់កុំឱ្យវា Fetch ទៅ API
+            }
+
+            // 2. ដំណើរការពេលមានអ៊ីនធឺណិត
             const token = localStorage.getItem('token');
             const response = await fetch(`${SCRIPT_URL}?action=getAllPermissionRequests&token=${token}`);
             const result = await response.json();
 
             if (result.success && result.data) {
-                // Save to local cache and render instantly
                 dataCache.permissionHistory = result.data.filter(item => item.Status !== 'Pending');
+                // Save ទិន្នន័យចូលទូរស័ព្ទទុកសម្រាប់មើលពេល Offline លើកក្រោយ
+                localStorage.setItem('studentPermissionHistory', JSON.stringify(dataCache.permissionHistory));
                 renderPermissionHistoryList();
             }
         } catch (error) {

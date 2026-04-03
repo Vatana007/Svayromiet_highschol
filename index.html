@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title data-translate-key="school_name">វិទ្យាល័យស្វាយរមៀត</title>
     <link rel="manifest" href="manifest.json">
-    <link rel="shortcut icon" href="images/DUC-Logo.png" type="image/x-icon">
+    <link rel="shortcut icon" href="images/high_logo.png" type="image/x-icon">
     <meta name="theme-color" content="#7B61FF">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -24,7 +24,7 @@
         rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/shepherd.js@10.0.1/dist/js/shepherd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
-    <script type="module" src="script.js" defer></script>
+    <script src="script.js" defer></script>
     <meta name="google-site-verification" content="qDXx2uNjC0Hn2Y4hdtXFbU8HVFrertTraL2wR9y1hTo" />
     <script>
         if (localStorage.getItem('token')) {
@@ -163,7 +163,8 @@
                     <header class="page-header">
                         <h1 class="page-title" data-translate-key="home_title" id="home-title">Home</h1>
                         <button id="notificationsBtn" class="icon-button" aria-label="View notifications"
-                            style="position: relative;">
+                            style="position: relative; z-index: 999999; cursor: pointer;"
+                            onclick="showNotificationsPage(event)">
                             <i class='bx bx-bell' aria-hidden="true"></i>
                             <span id="notification-badge" class="hidden"></span>
                         </button>
@@ -342,7 +343,8 @@
                     <header class="page-header">
                         <h1 class="page-title" data-translate-key="attendance_title" id="attendance-title">Attendance
                         </h1>
-                        <button id="viewPermissionHistoryBtn" class="icon-button" aria-label="View permission history">
+                        <button id="viewPermissionHistoryBtn" class="icon-button" aria-label="View permission history"
+                            style="position: relative; z-index: 999; cursor: pointer;">
                             <i class='bx bx-history'></i>
                         </button>
                     </header>
@@ -1046,9 +1048,9 @@
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/service-worker.js')
-                    .then(registration => console.log('Service Worker registered!'))
-                    .catch(err => console.error('Service Worker registration failed: ', err));
+                navigator.serviceWorker.register('./sw.js')
+                    .then(reg => console.log('Service Worker Registered Successfully!', reg))
+                    .catch(err => console.error('Service Worker Registration Failed!', err));
             });
         }
     </script>

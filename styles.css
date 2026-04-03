@@ -1956,21 +1956,28 @@ input:checked+.slider:before {
 }
 
 .overlay-details-container {
-    border-left: 3px solid transparent; /* លុបពណ៌ចាស់ចោល */
+    border-left: 3px solid transparent;
+    /* លុបពណ៌ចាស់ចោល */
     padding-left: 1rem;
-    transition: border-color 0.3s ease; /* ដាក់ឲ្យមានចលនាប្ដូរពណ៌រលូន */
+    transition: border-color 0.3s ease;
+    /* ដាក់ឲ្យមានចលនាប្ដូរពណ៌រលូន */
 }
 
 /* បន្ថែមពណ៌តាមស្ថានភាពនីមួយៗនៅខាងក្រោមនេះ */
 .overlay-details-container.status-pending {
-    border-left-color: var(--status-pending-text); /* ពណ៌ទឹកក្រូចសម្រាប់រង់ចាំ (Pending) */
+    border-left-color: var(--status-pending-text);
+    /* ពណ៌ទឹកក្រូចសម្រាប់រង់ចាំ (Pending) */
 }
+
 .overlay-details-container.status-approved {
-    border-left-color: var(--status-approved-text); /* ពណ៌បៃតងសម្រាប់អនុម័ត (Approved) */
+    border-left-color: var(--status-approved-text);
+    /* ពណ៌បៃតងសម្រាប់អនុម័ត (Approved) */
 }
+
 .overlay-details-container.status-rejected,
 .overlay-details-container.status-denied {
-    border-left-color: var(--status-denied-text); /* ពណ៌ក្រហមសម្រាប់បដិសេធ (Rejected) */
+    border-left-color: var(--status-denied-text);
+    /* ពណ៌ក្រហមសម្រាប់បដិសេធ (Rejected) */
 }
 
 .overlay-details-container .details-list {
@@ -2303,11 +2310,13 @@ input:checked+.slider:before {
     top: 0;
     left: 0;
     right: 0;
-    height: 60px; /* កម្ពស់កន្លែងរង្វង់វិល */
+    height: 60px;
+    /* កម្ពស់កន្លែងរង្វង់វិល */
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 1; /* ធានាថាវានៅខាងក្រោយ Header បន្តិច */
+    z-index: 1;
+    /* ធានាថាវានៅខាងក្រោយ Header បន្តិច */
     opacity: 0;
     transition: opacity 0.3s ease-out;
 }
@@ -2325,12 +2334,17 @@ input:checked+.slider:before {
 
 #pull-to-refresh-indicator .spinner.is-refreshing {
     animation: ptrSpin 1s linear infinite;
-    transition: none; 
+    transition: none;
 }
 
 @keyframes ptrSpin {
-    0% { transform: scale(1) rotate(0deg); }
-    100% { transform: scale(1) rotate(360deg); }
+    0% {
+        transform: scale(1) rotate(0deg);
+    }
+
+    100% {
+        transform: scale(1) rotate(360deg);
+    }
 }
 
 /* Styles for the schedule view containers */
@@ -3006,6 +3020,12 @@ input:checked+.slider:before {
     font-size: 3rem;
     margin-bottom: 0.5rem;
     opacity: 0.5;
+    color: var(--border-color);
+}
+
+.empty-state-schedule p {
+    margin-top: 0.75rem;
+    color: var(--secondary-text);
 }
 
 /* --- MODERN SCHEDULE TIMELINE --- */
@@ -3885,7 +3905,8 @@ input:checked+.slider:before {
 /* Pull to Refresh Styling */
 .pull-to-refresh-indicator {
     position: fixed;
-    top: -60px; /* លាក់នៅខាងលើសិន */
+    top: -60px;
+    /* លាក់នៅខាងលើសិន */
     left: 0;
     width: 100%;
     display: flex;
@@ -3897,12 +3918,164 @@ input:checked+.slider:before {
     color: var(--primary-color, #7B61FF);
     font-weight: 600;
     font-size: 0.95rem;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    z-index: 9999; /* ធ្វើឱ្យវានៅលើគេបង្អស់ (On Top) */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    z-index: 9999;
+    /* ធ្វើឱ្យវានៅលើគេបង្អស់ (On Top) */
     transition: top 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     border-radius: 0 0 20px 20px;
 }
 
 .pull-to-refresh-indicator.visible {
-    top: 0; /* លោតចេញមកក្រោមពេលសិស្សទាញអេក្រង់ */
+    top: 0;
+    /* លោតចេញមកក្រោមពេលសិស្សទាញអេក្រង់ */
+}
+
+.grade-letter,
+.average-value,
+.total-score-result-value {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    font-weight: 800;
+    line-height: 1;
+}
+
+.grade-title-letter,
+.average-title-letter,
+.total-score-result-title {
+    font-size: 0.72rem;
+    color: var(--secondary-text);
+    margin-bottom: 6px;
+    letter-spacing: 0.4px;
+}
+
+.grade-title-letter span,
+.average-title-letter span,
+.total-score-result-title span {
+    opacity: 0.7;
+}
+
+.grade-result-container,
+.average-result-container,
+.total-score-result-container {
+    padding: 18px 12px;
+    text-align: center;
+}
+
+.summary-grid-total-result {
+    display: grid;
+    grid-template-columns: 1fr 1px 1fr 1px 1fr;
+    background: var(--card-bg);
+}
+
+.summary-header-result {
+    background: linear-gradient(135deg, var(--primary-color) 0%, #a78bfa 100%);
+    padding: 10px 20px;
+    text-align: center;
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.8px;
+}
+
+.summary-card-result {
+    margin-top: 16px;
+    border-radius: 18px;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.07);
+    border: 1px solid var(--border-color);
+}
+
+.card-result-subject {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    cursor: pointer;
+}
+
+.subject-icon-result {
+    width: 46px;
+    height: 46px;
+    border-radius: 13px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.subject-icon-result i {
+    font-size: 1.35rem;
+}
+
+.subject-details-result {
+    flex: 1;
+    min-width: 0;
+}
+
+.subject-info-result {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 7px;
+}
+
+.subject-name-result {
+    font-weight: 700;
+    font-size: 0.93rem;
+    color: var(--primary-text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 62%;
+}
+
+.grade-letter-result {
+    font-weight: 800;
+    font-size: 0.88rem;
+    padding: 3px 11px;
+    border-radius: 20px;
+    letter-spacing: 0.3px;
+}
+
+.score-bar-result {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.score-bar-rate-result {
+    flex: 1;
+    background: var(--border-color);
+    border-radius: 99px;
+    height: 6px;
+    overflow: hidden;
+}
+
+.score-bar-fill-result {
+    height: 100%;
+    border-radius: 99px;
+    transition: width 0.7s cubic-bezier(.4, 0, .2, 1);
+}
+
+.score-value-result {
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: var(--secondary-text);
+    flex-shrink: 0;
+    min-width: 28px;
+    text-align: right;
+}
+
+.subject-cards-result {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 1rem;
+    padding: 0 2px;
 }
