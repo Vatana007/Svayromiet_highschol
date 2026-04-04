@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', function () {
-    const APP_VERSION = '1.0.1';
+    const APP_VERSION = '1.0.0';
 
     function checkAppVersion() {
         const storedVersion = localStorage.getItem('app_version');
@@ -24,7 +24,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
     checkAppVersion();
     // --- CONFIGURATION ---
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyU-gBFaLZmSXRVd8VhIsRo8-3dKd1L6PbnXdXqZxJtWrJM1tGI7J5hcXWBL3IlfDnG/exec';
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxpeIu-fjcJa2Xy-hMyhSR72ofeR_DWsCp7xJyT1hm-umZWe77UfcdgtNW1lYHqL93v_A/exec';
     const ALL_SEMESTERS = ['1', '2'];
     let currentSemester = ALL_SEMESTERS[ALL_SEMESTERS.length - 1];
     let lastFocusedElement = null;
@@ -435,10 +435,16 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         if (ui.dashboard && ui.mainContent) {
-            const ptrIndicator = document.createElement('div');
-            ptrIndicator.id = 'pull-to-refresh-indicator';
-            ptrIndicator.style.pointerEvents = 'none'; // <--- បន្ថែមបន្ទាត់នេះ
-            ptrIndicator.innerHTML = '<div class="spinner"></div>';
+            // Check if it already exists to prevent duplicates
+            if (!document.getElementById('pull-to-refresh-indicator')) {
+                const ptrIndicator = document.createElement('div');
+                ptrIndicator.id = 'pull-to-refresh-indicator';
+                ptrIndicator.style.pointerEvents = 'none';
+                ptrIndicator.innerHTML = '<div class="spinner"></div>';
+
+                // 🔴 CRITICAL FIX: Actually attach the element to the dashboard!
+                ui.dashboard.insertBefore(ptrIndicator, ui.mainContent);
+            }
         }
     }
 
@@ -653,6 +659,39 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
+    // --- 🟢 បន្ថែមថ្មី៖ ចាប់យកពេលមាន ឬគ្មានអ៊ីនធឺណិត (Online / Offline Event) ---
+
+    window.addEventListener('online', () => {
+        const lang = localStorage.getItem('language') || 'km';
+        // បង្ហាញសារថាមានអ៊ីនធឺណិតវិញហើយ
+        showTopNotification(lang === 'km' ? 'ភ្ជាប់អ៊ីនធឺណិតវិញហើយ! កំពុងទាញយកទិន្នន័យថ្មី...' : 'Back online! Updating data...', 'success');
+
+        const token = localStorage.getItem('token');
+        if (token) {
+            // ១. កំណត់ស្ថានភាពថា "មិនទាន់មានទិន្នន័យថ្មីទេ" ដើម្បីបង្ខំឲ្យវាទាញយកពី API សាជាថ្មី
+            dataCache.isInitialDataLoaded = false;
+            dataCache.isHeavyDataLoaded = false;
+
+            // ២. ទាញយកទិន្នន័យថ្មីដោយស្ងាត់ៗ (Background Fetch)
+            Promise.all([
+                fetchInitialDashboardData(token),
+                fetchHeavyDashboardData(token)
+            ]).then(() => {
+                // ៣. បន្ទាប់ពីទាញទិន្នន័យចប់ គូរអេក្រង់ (UI) ឡើងវិញភ្លាមៗ ដោយមិនចាំបាច់ Refresh Page ឡើយ!
+                rerenderCurrentSection();
+                updateNotificationBadge();
+            }).catch(err => {
+                console.error("Error auto-updating data after back online:", err);
+            });
+        }
+    });
+
+    window.addEventListener('offline', () => {
+        const lang = localStorage.getItem('language') || 'km';
+        // បង្ហាញសារថាដាច់អ៊ីនធឺណិត ហើយកំពុងប្រើទិន្នន័យពី Local Storage
+        showToast(lang === 'km' ? 'គ្មានអ៊ីនធឺណិតទេ! កំពុងបង្ហាញទិន្នន័យចាស់។' : 'You are offline. Using saved data.', 'error');
+    });
+
     function initCustomSelect(filterElement, renderFn) {
         const trigger = filterElement.querySelector('.select-trigger');
         const triggerText = trigger.querySelector('span');
@@ -735,7 +774,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
 
                 const indicator = document.getElementById('pull-to-refresh-indicator');
-                const spinner = indicator.querySelector('.spinner');
+                const spinner = indicator ? indicator.querySelector('.spinner') : null;
 
                 // Apply a "rubber-band" resistance effect
                 const resistance = 0.4;
@@ -758,7 +797,7 @@ document.addEventListener('DOMContentLoaded', function () {
             ptrState.isDragging = false;
 
             const indicator = document.getElementById('pull-to-refresh-indicator');
-            const spinner = indicator.querySelector('.spinner');
+            const spinner = indicator ? indicator.querySelector('.spinner') : null;
 
             // ១. ធ្វើឲ្យអារម្មណ៍ពេលទាញមានភាពរហ័ស និងឆ្លើយតបលឿនជាងមុន
             const resistance = 0.5; // កើនពី 0.4 ធ្វើឲ្យទាញទៅមានទម្ងន់ជាងមុន
@@ -1240,15 +1279,15 @@ document.addEventListener('DOMContentLoaded', function () {
                 <span>${timeAgo}</span>
             `;
             return div;
-        }, '<div class="card"><p>You have no notifications.</p></div>');
+        }, '<div class="card"><p data-translate-key="notifications_empty">You have no notifications.</p></div>');
     }
 
     async function showNotificationsPage(e) {
         if (e) e.preventDefault();
-        
+
         // លុបចោលការគាំង Animation មុននឹងចាប់ផ្ដើមថ្មី
-        delete ui.homeSection.dataset.isAnimating; 
-        
+        delete ui.homeSection.dataset.isAnimating;
+
         ui.homeSection.dataset.isAnimating = 'true';
         lastFocusedElement = document.activeElement;
 
@@ -2806,7 +2845,7 @@ document.addEventListener('DOMContentLoaded', function () {
             historyListContainer.style.overflow = '';
         }
         const activeSubPage = ui.attendanceSection.querySelector('.sub-page:not(.hidden)');
-        
+
         // 🟢 ៣. ដោះស្រាយបញ្ហាគាំង
         delete ui.attendanceSection.dataset.isAnimating;
 
@@ -2849,9 +2888,9 @@ document.addEventListener('DOMContentLoaded', function () {
             div.innerHTML = `
                 <div class="swipe-action-delete" aria-label="Delete">
                     <i class='bx bx-trash'></i>
-                    <span>Delete</span>
+                    <span data-translate-key="modal_delete_history">Delete</span>
                 </div>
-                <div class="swipe-card card" style="margin-bottom: 0; border: none;">
+                <div class="swipe-card card">
                     <div style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
                         <div>
                             <p style="font-weight: 600; margin-bottom: 0.25rem;">${item.StatusType}</p>
@@ -2864,7 +2903,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 </div>
             `;
             return div;
-        }, 85);
+        }, 95);
     }
 
     async function showPermissionHistoryPage(e) {
@@ -4101,9 +4140,9 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         const totalHeight = fullData.length * itemHeight;
-        container.style.height = `${totalHeight}px`;
+        container.style.height = `${totalHeight + 80}px`; /* 🔴 បន្ថែម + 80 ដើម្បីទុកចន្លោះបាតកុំឱ្យដាច់កាត */
         container.style.position = 'relative';
-        container.style.overflow = 'hidden';
+        container.style.overflow = 'visible'; /* 🔴 ដូរពី hidden ទៅ visible ដើម្បីបង្ហាញ Border/Shadow ចុងក្រោយកុំឱ្យដាច់ */
 
         let lastRenderedStartIndex = -1;
 

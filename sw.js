@@ -1,5 +1,5 @@
 // កំណត់ឈ្មោះ Cache (ប្ដូរលេខ v1 ទៅ v2 ពេលអ្នក Update កូដថ្មី)
-const CACHE_NAME = 'svayromeit-app-v5';
+const CACHE_NAME = 'svayromeit-app-v1';
 
 // បញ្ចូលឈ្មោះឯកសារទាំងអស់ដែលចង់ឱ្យវា Save ទុកពេល Offline
 const ASSETS_TO_CACHE = [
@@ -24,7 +24,7 @@ self.addEventListener('install', (event) => {
   );
 });
 
-// ពេល App ទាញយកទិន្នន័យ (Fetch) ឱ្យឆែកមើល Cache សិន
+// ពេល App ទាញយកទិន្នន័យ (Fetch)
 self.addEventListener('fetch', (event) => {
   // មិន Cache រាល់ការ Request ទៅកាន់ Google Apps Script API ទេ
   if (event.request.url.includes('script.google.com')) {
@@ -32,10 +32,19 @@ self.addEventListener('fetch', (event) => {
   }
 
   event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      // បើមានក្នុង Cache (Offline) ឱ្យបង្ហាញ Cache, បើអត់ទេ ឱ្យទាញពី Internet ថ្មី
-      return cachedResponse || fetch(event.request);
-    })
+    // ១. ព្យាយាមទាញយកកូដថ្មីពី Internet (ឬ VS Code Live Server) មុនគេជានិច្ច!
+    fetch(event.request)
+      .then((networkResponse) => {
+        // ២. បើទាញយកបានជោគជ័យ -> វាលុបកូដចាស់ ហើយទាញយកកូដថ្មីរបស់អ្នក Save ចូល Cache ដោយស្វ័យប្រវត្តិ
+        return caches.open(CACHE_NAME).then((cache) => {
+          cache.put(event.request, networkResponse.clone());
+          return networkResponse;
+        });
+      })
+      .catch(() => {
+        // ៣. បើគ្មានអ៊ីនធឺណិត (Offline) -> ទើបវាទៅចាប់យកកូដដែលបាន Save ទុកចុងក្រោយពី Cache មកបង្ហាញ
+        return caches.match(event.request);
+      })
   );
 });
 

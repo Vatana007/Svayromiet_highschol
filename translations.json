@@ -54,9 +54,12 @@
         "my_profile_phone": "Phone",
         "my_profile_email": "Email",
         "my_profile_sex": "Sex",
+        "my_profile_student_year": "Year student",
         "my_profile_dob": "Date of Birth",
         "my_profile_academic_info": "Academic Information",
         "my_profile_class": "Class",
+        "profile_class": "Grade",
+        "install_app" : "Install App",
         "my_profile_room": "Room",
         "my_profile_level": "Level",
         "my_profile_generation": "Generation",
@@ -212,7 +215,11 @@
         "month_10": "October",
         "month_11": "November",
         "month_12": "December",
-        "admin_portal": "Admin Portal"
+        "admin_portal": "Admin Portal",
+        "view_submissions": "View Submissions",
+        "result_academic_year": "Academic Year",
+        "modal_delete_history": "Delete",
+        "notifications_empty": "You have no notifications."
     },
     "km": {
         "school_name": "វិទ្យាល័យស្វាយរមៀត",
@@ -238,7 +245,7 @@
         "home_tab_events": "ព្រឹត្តិការណ៍",
         "schedule_title": "កាលវិភាគ",
         "result_title": "លទ្ធផលសិក្សា",
-        "result_cgpa": "មធ្យមភាគសរុប (GPA)",
+        "result_cgpa": "មធ្យមភាគសរុប",
         "result_credits": "ក្រេឌីតដែលទទួលបាន",
         "result_detail_score": "លម្អិតពិន្ទុ",
         "result_detail_attendance": "សង្ខេបវត្តមាន",
@@ -276,6 +283,9 @@
         "my_profile_level": "កម្រិត",
         "my_profile_generation": "ជំនាន់",
         "my_profile_major": "ជំនាញ",
+        "my_profile_student_year": "ឆ្នាំសិក្សា",
+        "profile_class": "ថ្នាក់",
+        "install_app" : "ដំឡើងកម្មវិធី",
         "my_profile_work": "តួនាទីការងារ",
         "profile_login_security_info": "នេះគឺជាបញ្ជីនៃការចូលប្រើគណនីរបស់អ្នកថ្មីៗនេះ។ ប្រសិនបើអ្នកឃើញសកម្មភាពមិនប្រក្រតី សូមប្តូរពាក្យសម្ងាត់ជាបន្ទាន់។",
         "email_edit_title": "អ៊ីមែល",
@@ -428,6 +438,10 @@
         "month_10": "តុលា",
         "month_11": "វិច្ឆិកា",
         "month_12": "ធ្នូ",
-        "admin_portal": "ចូលជាអ្នកគ្រប់គ្រង"
+        "admin_portal": "ចូលជាអ្នកគ្រប់គ្រង",
+        "view_submissions": "មើលការដាក់ស្នើ",
+        "result_academic_year": "ឆ្នាំសិក្សា",
+        "modal_delete_history": "លុប",
+        "notifications_empty": "អ្នកមិនមានការជូនដំណឹងទេ។"
     }
 }

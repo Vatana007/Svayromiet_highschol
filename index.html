@@ -215,7 +215,7 @@
                     <header class="page-header">
                         <button class="back-button icon-button" aria-label="Go back to home"><i
                                 class='bx bx-chevron-left' aria-hidden="true"></i></button>
-                        <h1 class="page-title">Notifications</h1>
+                        <h1 class="page-title" data-translate-key="tour_notifications_title">Notifications</h1>
                         <div style="width: 24px;"></div>
                     </header>
                     <div id="notifications-list-container" class="list-container" style="gap: 1rem;">
@@ -498,7 +498,7 @@
                     <header class="page-header">
                         <button class="back-button icon-button" aria-label="Go back to attendance list"><i
                                 class='bx bx-chevron-left' aria-hidden="true"></i></button>
-                        <h1 class="page-title">Permission History</h1>
+                        <h1 class="page-title" data-translate-key="permission_history_title">Permission History</h1>
                         <div style="width: 24px;"></div>
                     </header>
                     <div id="permission-history-list" class="list-container" style="gap: 1rem;">
@@ -555,7 +555,7 @@
                         </div>
                         <div class="stat-item">
                             <span class="stat-value" id="profile-grade-stat">--</span>
-                            <span class="stat-label">Grade</span>
+                            <span class="stat-label" data-translate-key="profile_class">Grade</span>
                         </div>
                         <div class="stat-item">
                             <span class="stat-value" id="profile-year">--</span>
@@ -601,7 +601,7 @@
                             </a>
                             <a href="#" id="installAppBtn" class="settings-item" style="display: none;">
                                 <span class="setting-icon appearance bx bx-download" aria-hidden="true"></span>
-                                <span>Install App</span>
+                                <span data-translate-key="install_app">Install App</span>
                                 <span class="chevron"><i class='bx bx-chevron-right' aria-hidden="true"></i></span>
                             </a>
                         </div>
@@ -684,7 +684,7 @@
                             </div>
 
                             <div class="detail-item">
-                                <span class="detail-label">Year student</span>
+                                <span class="detail-label" data-translate-key="my_profile_student_year">Year student</span>
                                 <span id="profile-display-year" class="detail-value"></span>
                             </div>
                         </div>
@@ -910,20 +910,20 @@
                             <button class="segmented-control-button active" data-theme-mode="auto">Auto</button>
                         </div>
 
-                        <div id="oled-mode-container" class="settings-list hidden"
-                            style="gap: 1rem; margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border-color);">
-                            <div class="settings-item" style="border-bottom: none; padding-bottom: 0;">
-                                <span class="setting-icon appearance bx bxs-moon" aria-hidden="true"></span>
-                                <span>"True Black" for OLED</span>
-                                <label class="switch" style="margin-left: auto;">
-                                    <input type="checkbox" id="oledModeToggle">
-                                    <span class="slider round"></span>
-                                </label>
-                            </div>
+                    </div>
+                    <div id="oled-mode-container" class="settings-list hidden"
+                        style="gap: 1rem; margin-top: 1.5rem;">
+                        <div class="settings-item" style="border-bottom: none; padding-bottom: 0;">
+                            <span class="setting-icon appearance bx bxs-moon" aria-hidden="true"></span>
+                            <span>"True Black" for OLED</span>
+                            <label class="switch" style="margin-left: auto;">
+                                <input type="checkbox" id="oledModeToggle">
+                                <span class="slider round"></span>
+                            </label>
                         </div>
                     </div>
 
-                    <div class="card">
+                    <div class="card card-text-size">
                         <h3 class="card-title">Text Size</h3>
                         <div id="text-size-selector" class="segmented-control">
                             <button class="segmented-control-button" data-text-size="0.9">Small</button>
@@ -932,7 +932,7 @@
                         </div>
                     </div>
 
-                    <div class="card">
+                    <div class="card card-reduce-motion">
                         <div class="settings-list" style="gap: 1rem;">
                             <div class="settings-item">
                                 <span class="setting-icon power-saving bx bx-run" aria-hidden="true"></span>
@@ -954,7 +954,7 @@
                         <div style="width: 24px;"></div>
                     </header>
                     <div>
-                        <button id="viewMyFeedbackBtn" class="button"
+                        <button id="viewMyFeedbackBtn" class="button" data-translate-key="view_submissions"
                             style="background-color: var(--accent-color-light); color: var(--accent-color); width: 100%;">
                             View My Submissions
                         </button>
