@@ -4,7 +4,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let cache = { students: null, schedule: null, exams: null, reqs: null, announcements: null, feedback: null };
     let debounceTimer;
 
-    // --- 1. THEME & EXTRA FEATURES ---
+        // --- 1. THEME & EXTRA FEATURES ---
     const themeBtn = document.getElementById('themeToggle');
     const currentTheme = localStorage.getItem('glass_theme') || 'light';
     document.documentElement.setAttribute('data-theme', currentTheme);

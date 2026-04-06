@@ -1,5 +1,5 @@
 // កំណត់ឈ្មោះ Cache (ប្ដូរលេខ v1 ទៅ v2 ពេលអ្នក Update កូដថ្មី)
-const CACHE_NAME = 'svayromeit-app-v1';
+const CACHE_NAME = 'svayromeit-app-v9';
 
 // បញ្ចូលឈ្មោះឯកសារទាំងអស់ដែលចង់ឱ្យវា Save ទុកពេល Offline
 const ASSETS_TO_CACHE = [

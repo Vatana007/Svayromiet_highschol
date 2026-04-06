@@ -42,7 +42,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // --- TRANSLATION DATA ---
     let translations = {};
 
-    // --- NUMBER TRANSLATION HELPER ---
+        // --- NUMBER TRANSLATION HELPER ---
     function formatNumber(num) {
         if (num === null || num === undefined) return '';
         const str = num.toString();
@@ -375,7 +375,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function updateCurrentLanguageDisplay() {
         const lang = localStorage.getItem('language') || 'km';
-        ui.currentLanguageDisplay.textContent = lang === 'km' ? 'Khmer' : 'English';
+        const t = translations[lang] || {};
+
+        // វានឹងទាញយកពាក្យពី translations.json មកបង្ហាញតាមភាសាដែលកំពុងប្រើ
+        if (lang === 'km') {
+            ui.currentLanguageDisplay.textContent = t.lang_km || 'ខ្មែរ';
+        } else {
+            ui.currentLanguageDisplay.textContent = t.lang_en || 'English';
+        }
     }
 
     function renderLanguageSelection() {
@@ -831,7 +838,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         // បើនៅផ្ទាំងពិន្ទុ ឬវត្តមាន ឲ្យវាទាញទិន្នន័យធំ "ព្រមគ្នា" ជាមួយទិន្នន័យធម្មតា
                         if (['#result', '#attendance', '#schedule'].includes(currentHash)) {
                             dataCache.isHeavyDataLoaded = false;
-                            fetchTasks.push(fetchHeavyDashboardData(token));
+                            fetchTasks.push(fetchHeavyDashboardData(token, true));
                         }
 
                         // បញ្ជាឲ្យទាញយកទិន្នន័យទាំងអស់ "ព្រមគ្នាក្នុងពេលតែមួយ" (ចំណេញពេល៥០%)
@@ -874,31 +881,18 @@ document.addEventListener('DOMContentLoaded', function () {
             const token = localStorage.getItem('token');
             if (!token) throw new Error("Not logged in");
 
+            // It only fetches when explicitly called! This is correct.
             const [initialDataResult, permissionResult] = await Promise.all([
-                fetch(`${SCRIPT_URL}?action=getInitialDashboardData&token=${token}`).then(res => res.json()),
+                fetchInitialDashboardData(token, true),
                 fetch(`${SCRIPT_URL}?action=getLatestPermissionRequest&token=${token}`).then(res => res.json())
             ]);
 
-            if (initialDataResult.success) {
-                dataCache.profile = initialDataResult.data.profile;
-                dataCache.announcements = initialDataResult.data.announcements;
-                dataCache.events = initialDataResult.data.events;
-                dataCache.notifications = initialDataResult.data.notifications;
-                updateNotificationBadge();
-                localStorage.setItem('studentProfile', JSON.stringify(dataCache.profile));
-            } else {
-                console.error("Failed to refresh initial data:", initialDataResult.message);
-            }
-
-            if (permissionResult.success) {
+            if (permissionResult && permissionResult.success) {
                 dataCache.latestPermissionRequest = permissionResult.data;
-            } else {
-                console.error("Failed to refresh permission data:", permissionResult.message);
             }
 
             rerenderCurrentSection();
 
-            // ឆែកមើលថាតើសិស្សកំពុងបើកមើលផ្ទាំងសុំច្បាប់ឬអត់
             const permView = document.getElementById('permission-request-view');
             if (permView && !permView.classList.contains('hidden')) {
                 await checkExistingPermissionRequest();
@@ -916,12 +910,24 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    async function fetchInitialDashboardData(token) {
+    async function fetchInitialDashboardData(token, forceRefresh = false) {
         if (!navigator.onLine) {
             console.log("Offline mode: Using cached Initial Data.");
             dataCache.isInitialDataLoaded = true;
             return { success: true };
         }
+
+        // --- ចាប់ផ្តើមបច្ចេកទេស Cache (រក្សាទុក ៥ នាទី សម្រាប់ពត៌មានសាលា) ---
+        const CACHE_MINUTES = 5;
+        const lastFetchTime = localStorage.getItem('initialData_time');
+        const now = new Date().getTime();
+
+        if (!forceRefresh && lastFetchTime && (now - parseInt(lastFetchTime)) < (CACHE_MINUTES * 60 * 1000)) {
+            console.log("⚡ ទាញយកព័ត៌មានសាលា ពីទូរស័ព្ទ (Cache) - មិនរំខាន Server ទេ");
+            dataCache.isInitialDataLoaded = true;
+            return { success: true };
+        }
+        // ---------------------------------------------
 
         dataCache.isFetchingInitialData = true;
         try {
@@ -941,6 +947,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 updateNotificationBadge();
                 localStorage.setItem('studentProfile', JSON.stringify(result.data.profile));
+                localStorage.setItem('initialData_time', now.toString()); // កត់ត្រាម៉ោង
+
                 return { success: true };
             }
 
@@ -954,17 +962,24 @@ document.addEventListener('DOMContentLoaded', function () {
         } catch (error) {
             console.error('Fetch Initial Data Error:', error);
             dataCache.isFetchingInitialData = false;
-
-            // ដំណោះស្រាយ៖ ប្រាប់ប្រព័ន្ធកុំឱ្យ Loading បន្តទៀត (ទោះជា Error ក៏ដោយ)
             dataCache.isInitialDataLoaded = true;
-
             return { success: false, message: error.message };
         }
     }
 
-    async function fetchHeavyDashboardData(token) {
+    async function fetchHeavyDashboardData(token, forceRefresh = false) {
         if (!navigator.onLine) {
             console.log("Offline mode: Using cached Heavy Data.");
+            dataCache.isHeavyDataLoaded = true;
+            return { success: true };
+        }
+
+        const CACHE_MINUTES = 15;
+        const lastFetchTime = localStorage.getItem('heavyData_time');
+        const now = new Date().getTime();
+
+        if (!forceRefresh && lastFetchTime && (now - parseInt(lastFetchTime)) < (CACHE_MINUTES * 60 * 1000)) {
+            console.log("⚡ ទាញយកពិន្ទុ/កាលវិភាគ ពីទូរស័ព្ទ (Cache) - មិនរំខាន Server ទេ");
             dataCache.isHeavyDataLoaded = true;
             return { success: true };
         }
@@ -972,7 +987,10 @@ document.addEventListener('DOMContentLoaded', function () {
         dataCache.isFetchingHeavyData = true;
 
         try {
-            const response = await fetch(`${SCRIPT_URL}?action=getHeavyDashboardData&token=${token}`);
+            // 🟢 បន្ថែម Parameter &force=true ដើម្បីប្រាប់ AppScript ឱ្យបញ្ចេញទិន្នន័យថ្មី
+            const refreshParam = forceRefresh ? "&force=true" : "";
+            const response = await fetch(`${SCRIPT_URL}?action=getHeavyDashboardData&token=${token}${refreshParam}`);
+            
             if (!response.ok) throw new Error(`Network response was not ok: ${response.statusText}`);
             const result = await response.json();
 
@@ -987,11 +1005,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 dataCache.isHeavyDataLoaded = true;
 
-                // រក្សាទុកទិន្នន័យចូលក្នុង Memory ទូរស័ព្ទ
                 localStorage.setItem('studentSchedule', JSON.stringify(result.data.schedule || []));
                 localStorage.setItem('studentAttendance', JSON.stringify(result.data.attendance || {}));
                 localStorage.setItem('studentScores', JSON.stringify(result.data.scores || {}));
                 localStorage.setItem('studentExamSchedule', JSON.stringify(result.data.examSchedule || []));
+                localStorage.setItem('heavyData_time', now.toString());
 
                 return { success: true };
             }
@@ -1006,13 +1024,8 @@ document.addEventListener('DOMContentLoaded', function () {
         } catch (error) {
             console.error('Fetch Heavy Data Error:', error);
             dataCache.isFetchingHeavyData = false;
-
-            // ដំណោះស្រាយ៖ ប្រាប់ប្រព័ន្ធថាទាញយកចប់ហើយ (ទោះជា Error ក៏ដោយ)
             dataCache.isHeavyDataLoaded = true;
-
-            // បង្ខំឱ្យវាគូរអេក្រង់ឡើងវិញភ្លាមៗ ដើម្បីលុប Skeleton Loading ចេញ
             rerenderCurrentSection();
-
             return { success: false, message: error.message };
         }
     }
@@ -1771,17 +1784,8 @@ document.addEventListener('DOMContentLoaded', function () {
         // Logic similar to renderProfessionalTimeline but different HTML structure
     }
 
-    function formatTimeDisplay(val) {
-        const h = Math.floor(val);
-        const m = Math.round((val - h) * 60);
-        const ampm = h >= 12 ? 'PM' : 'AM';
-        const h12 = h % 12 || 12;
-        const mStr = m < 10 ? '0' + m : m;
-        return `${h12}:${mStr} ${ampm}`;
-    }
-
     function renderExamSchedule() {
-        // FIX: Show card skeletons until exam data is fully loaded
+        // បង្ហាញ Skeleton រហូតដល់ទិន្នន័យដើរចប់
         if (!dataCache.isHeavyDataLoaded) {
             renderLoadingSkeleton(ui.examListContainer, 3);
             return;
@@ -1797,11 +1801,33 @@ document.addEventListener('DOMContentLoaded', function () {
 
             const examDate = new Date(item.Date);
 
-            // Use correct locale for date formatting
-            const dateLocale = lang === 'km' ? 'km-KH' : 'en-GB';
-            const formattedDate = examDate.toLocaleDateString(dateLocale, {
-                weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
-            });
+            // ==================================================
+            // ផ្នែកបន្ថែមថ្មី៖ បម្លែងកាលបរិច្ឆេទទៅជាភាសាខ្មែរ
+            // ==================================================
+            let formattedDate = '';
+
+            if (!isNaN(examDate.getTime())) {
+                if (lang === 'km') {
+                    // ទម្រង់ភាសាខ្មែរពេញលេញ
+                    const kmDays = ['អាទិត្យ', 'ចន្ទ', 'អង្គារ', 'ពុធ', 'ព្រហស្បតិ៍', 'សុក្រ', 'សៅរ៍'];
+                    const kmMonths = ['មករា', 'កុម្ភៈ', 'មីនា', 'មេសា', 'ឧសភា', 'មិថុនា', 'កក្កដា', 'សីហា', 'កញ្ញា', 'តុលា', 'វិច្ឆិកា', 'ធ្នូ'];
+
+                    const dayName = kmDays[examDate.getDay()];
+                    const dayNum = formatNumber(examDate.getDate());
+                    const monthName = kmMonths[examDate.getMonth()];
+                    const yearNum = formatNumber(examDate.getFullYear());
+
+                    formattedDate = `${dayName}, ${dayNum} ${monthName} ${yearNum}`;
+                } else {
+                    // ទម្រង់ភាសាអង់គ្លេសពេញលេញ
+                    formattedDate = examDate.toLocaleDateString('en-GB', {
+                        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+                    });
+                }
+            } else {
+                formattedDate = item.Date; // បង្ហាញទិន្នន័យដើមប្រសិនបើវា Error
+            }
+            // ==================================================
 
             // Translate Time Numbers
             const startTime = formatTimeForDisplay(item.StartTime);
@@ -1822,7 +1848,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 </div>
             `;
             return card;
-        }, `<div class="card"><p>${t.msg_no_exam_schedule || 'No exam schedules have been posted.'}</p></div>`);
+        }, `<div class="card"><p>${t.msg_no_exam_schedule || 'មិនមានកាលវិភាគប្រឡងទេ'}</p></div>`);
     }
 
     // --- renderResult in script.js ---
@@ -2460,13 +2486,38 @@ document.addEventListener('DOMContentLoaded', function () {
 
         // 2. Personal Information (Standard Fields)
         const personalFields = ['khmerName', 'phone', 'sex', 'dob', 'email'];
+        const lang = localStorage.getItem('language') || 'km'; // ឆែកមើលភាសា
+
         personalFields.forEach(key => {
             const el = document.getElementById(`profile-${key}`);
             if (el) {
                 let value = profile[key] || '';
+
+                // ==========================================
+                // កែប្រែទម្រង់ថ្ងៃខែឆ្នាំកំណើត (DOB)
+                // ==========================================
                 if (key === 'dob' && value) {
-                    value = new Date(value).toLocaleDateString('en-GB');
+                    const dobDate = new Date(value);
+                    if (!isNaN(dobDate.getTime())) {
+                        if (lang === 'km') {
+                            const kmMonths = ['មករា', 'កុម្ភៈ', 'មីនា', 'មេសា', 'ឧសភា', 'មិថុនា', 'កក្កដា', 'សីហា', 'កញ្ញា', 'តុលា', 'វិច្ឆិកា', 'ធ្នូ'];
+
+                            const dayNum = formatNumber(dobDate.getDate());
+                            const monthName = kmMonths[dobDate.getMonth()];
+                            const yearNum = formatNumber(dobDate.getFullYear());
+
+                            // បង្ហាញជាទម្រង់៖ ០៥ មេសា ២០០៤ (ជាទូទៅថ្ងៃកំណើតគេមិនសរសេរថ្ងៃចន្ទ អង្គារ ទេ)
+                            value = `${dayNum} ${monthName} ${yearNum}`;
+                        } else {
+                            // ទម្រង់អង់គ្លេស
+                            value = dobDate.toLocaleDateString('en-GB', {
+                                day: 'numeric', month: 'short', year: 'numeric'
+                            });
+                        }
+                    }
                 }
+                // ==========================================
+
                 el.textContent = value;
             }
         });
@@ -2880,22 +2931,51 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
+        // --- ចាប់យកពាក្យបកប្រែសម្រាប់ប៊ូតុង Delete ---
+        const lang = localStorage.getItem('language') || 'km';
+        const t = translations[lang] || {};
+        const txtDelete = t.modal_delete_history || (lang === 'km' ? 'លុប' : 'Delete');
+
         renderVirtualizedList(historyListContainer, dataCache.permissionHistory, (item) => {
             const div = document.createElement('div');
             div.className = 'swipe-container';
             div.dataset.transactionId = item.TransactionID;
 
+            // បម្លែងកាលបរិច្ឆេទទៅជាភាសាខ្មែរ
+            let displayDate = '';
+            const requestDate = new Date(item.RequestDate);
+
+            if (!isNaN(requestDate.getTime())) {
+                if (lang === 'km') {
+                    const kmDays = ['អាទិត្យ', 'ចន្ទ', 'អង្គារ', 'ពុធ', 'ព្រហស្បតិ៍', 'សុក្រ', 'សៅរ៍'];
+                    const kmMonths = ['មករា', 'កុម្ភៈ', 'មីនា', 'មេសា', 'ឧសភា', 'មិថុនា', 'កក្កដា', 'សីហា', 'កញ្ញា', 'តុលា', 'វិច្ឆិកា', 'ធ្នូ'];
+
+                    const dayName = kmDays[requestDate.getDay()];
+                    const dayNum = formatNumber(requestDate.getDate());
+                    const monthName = kmMonths[requestDate.getMonth()];
+                    const yearNum = formatNumber(requestDate.getFullYear());
+
+                    displayDate = `${dayName}, ${dayNum} ${monthName} ${yearNum}`;
+                } else {
+                    displayDate = requestDate.toLocaleDateString('en-GB', {
+                        weekday: 'short', day: 'numeric', month: 'short', year: 'numeric'
+                    });
+                }
+            } else {
+                displayDate = item.RequestDate;
+            }
+
             div.innerHTML = `
                 <div class="swipe-action-delete" aria-label="Delete">
                     <i class='bx bx-trash'></i>
-                    <span data-translate-key="modal_delete_history">Delete</span>
+                    <span>${txtDelete}</span>
                 </div>
                 <div class="swipe-card card">
                     <div style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
                         <div>
                             <p style="font-weight: 600; margin-bottom: 0.25rem;">${item.StatusType}</p>
                             <small style="color: var(--secondary-text);">
-                                ${new Date(item.RequestDate).toLocaleDateString('en-GB')}
+                                ${displayDate} 
                             </small>
                         </div>
                         <span class="status-badge status-${(item.Status || '').toLowerCase()}">${getTranslatedStatus(item.Status)}</span>
@@ -3368,7 +3448,11 @@ document.addEventListener('DOMContentLoaded', function () {
         e.preventDefault();
         const form = ui.feedbackForm;
         const submitBtn = form.querySelector('button[type="submit"]');
-        const category = document.getElementById('feedbackCategorySelect').dataset.value;
+
+        // កូដដែលទើបតែកែថ្មី
+        const categorySpan = document.querySelector('#feedbackCategorySelect .select-trigger span');
+        const category = categorySpan ? categorySpan.textContent.trim() : 'Feedback';
+
         const message = document.getElementById('feedbackMessage').value;
 
         if (!message || message.trim().length < 10) {
@@ -3380,6 +3464,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const payload = {
             token: localStorage.getItem('token'),
+            studentId: dataCache.profile ? dataCache.profile.studentId : localStorage.getItem('token'),
+            studentName: dataCache.profile ? dataCache.profile.khmerName || dataCache.profile.englishName : 'Unknown',
             category,
             message
         };
@@ -4025,6 +4111,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
     async function renderSecurityPage() {
         const container = document.getElementById('login-history-list');
+
+        // --- ចាប់យកពាក្យបកប្រែ ---
+        const lang = localStorage.getItem('language') || 'km';
+        const t = translations[lang] || {};
+        const txtNoHistory = t.login_history_empty || (lang === 'km' ? 'មិនមានប្រវត្តិចូលប្រើប្រាស់ទេ។' : 'No login history found.');
+
         container.innerHTML = `
         <div class="skeleton" style="height: 40px; width: 100%; border-radius: 8px;"></div>
         <div class="skeleton" style="height: 40px; width: 100%; border-radius: 8px;"></div>
@@ -4049,20 +4141,38 @@ document.addEventListener('DOMContentLoaded', function () {
                 const itemDate = new Date(item.Timestamp);
                 const timeAgo = formatTimeAgo(itemDate);
 
+                // បម្លែងកាលបរិច្ឆេទក្នុងប្រវត្តិ Login ជាខ្មែរ (ជាជម្រើស)
+                let displayDate = itemDate.toLocaleString('en-GB');
+                if (lang === 'km') {
+                    const kmDays = ['អាទិត្យ', 'ចន្ទ', 'អង្គារ', 'ពុធ', 'ព្រហស្បតិ៍', 'សុក្រ', 'សៅរ៍'];
+                    const kmMonths = ['មករា', 'កុម្ភៈ', 'មីនា', 'មេសា', 'ឧសភា', 'មិថុនា', 'កក្កដា', 'សីហា', 'កញ្ញា', 'តុលា', 'វិច្ឆិកា', 'ធ្នូ'];
+
+                    const dayName = kmDays[itemDate.getDay()];
+                    const dayNum = formatNumber(itemDate.getDate());
+                    const monthName = kmMonths[itemDate.getMonth()];
+                    const yearNum = formatNumber(itemDate.getFullYear());
+                    const h = formatNumber(itemDate.getHours() % 12 || 12);
+                    const m = formatNumber(itemDate.getMinutes().toString().padStart(2, '0'));
+                    const ampm = itemDate.getHours() >= 12 ? 'ល្ងាច' : 'ព្រឹក';
+
+                    displayDate = `${dayName}, ${dayNum} ${monthName} ${yearNum} (${h}:${m} ${ampm})`;
+                }
+
                 div.innerHTML = `
                 <div class="history-item-icon ${statusClass}">
                     <i class='bx ${iconClass}'></i>
                 </div>
                 <div class="history-item-info">
                     <p>${item.Status}</p>
-                    <span>${itemDate.toLocaleString()} (${timeAgo})</span>
+                    <span>${displayDate}</span>
                 </div>
             `;
                 return div;
-            }, '<div class="card"><p>No login history found.</p></div>');
+            }, `<div class="card"><p>${txtNoHistory}</p></div>`); // <--- ប្រើប្រាស់អថេរ txtNoHistory នៅទីនេះ
 
         } catch (error) {
-            container.innerHTML = `<div class="card"><p>Could not load login history.</p></div>`;
+            const errorMsg = lang === 'km' ? 'មិនអាចទាញយកប្រវត្តិចូលប្រើប្រាស់បានទេ។' : 'Could not load login history.';
+            container.innerHTML = `<div class="card"><p>${errorMsg}</p></div>`;
             console.error("Error fetching login history:", error);
         }
     }
@@ -4188,22 +4298,33 @@ document.addEventListener('DOMContentLoaded', function () {
     async function showMyFeedbackPage() {
         showProfileSubPage(ui.myFeedbackView);
         const container = document.getElementById('my-feedback-list');
-        container.innerHTML = `
-        <div class="skeleton skeleton-card"></div>
-        <div class="skeleton skeleton-card"></div>
-        <div class="skeleton skeleton-card"></div>
-    `;
+
+        const lang = localStorage.getItem('language') || 'km';
+        const t = translations[lang] || {};
+        const txtNoFeedback = t.msg_no_feedback || (lang === 'km' ? 'អ្នកមិនទាន់បានបញ្ជូនមតិយោបល់ណាមួយនៅឡើយទេ។' : 'You have not submitted any feedback yet.');
+
+        container.innerHTML = `<div class="skeleton skeleton-card"></div><div class="skeleton skeleton-card"></div>`;
 
         try {
             const token = localStorage.getItem('token');
-            const response = await fetch(`${SCRIPT_URL}?action=getFeedbackHistory&token=${token}`);
+            // 🔴 ទាញយក studentId ពី dataCache (ឧទាហរណ៍៖ 7374)
+            const studentId = dataCache.profile ? String(dataCache.profile.studentId).trim() : '';
+
+            // បញ្ជូនទៅកាន់ API
+            const response = await fetch(`${SCRIPT_URL}?action=getFeedbackHistory&token=${token}&studentId=${studentId}&t=${new Date().getTime()}`);
             const result = await response.json();
+
             if (!result.success) throw new Error(result.message);
+
+            if (result.data && result.data.length === 0) {
+                container.innerHTML = `<div class="card"><p>${txtNoFeedback}</p></div>`;
+                return;
+            }
 
             const statusClassMap = {
                 'New': 'status-pending',
                 'Viewed': 'status-approved',
-                'In Progress': 'status-approved',
+                'In Progress': 'status-pending',
                 'Resolved': 'status-approved',
                 'Closed': 'status-denied'
             };
@@ -4211,25 +4332,33 @@ document.addEventListener('DOMContentLoaded', function () {
             renderList(container, result.data, (item) => {
                 const div = document.createElement('div');
                 div.className = 'card';
-                const itemDate = new Date(item.Timestamp);
-                const statusClass = statusClassMap[item.Status] || 'status-pending';
+
+                const category = item.Category || item.category || 'Feedback';
+                const message = item.Message || item.message || '';
+                const status = item.Status || item.status || 'New';
+                const reply = item.Reply || item.reply || item.AdminReply || '';
+                const statusClass = statusClassMap[status] || 'status-pending';
 
                 div.innerHTML = `
-                    <div style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
-                        <div>
-                            <p style="font-weight: 600; margin-bottom: 0.25rem;">${item.StatusType || 'Permission'}</p>
-                            <small style="color: var(--secondary-text);">
-                                ${new Date(item.RequestDate).toLocaleDateString('en-GB')} | ${getDisplayDuration(item.duration || item.DayStop)}
-                            </small>
-                        </div>
-                        <span class="status-badge status-${(item.Status || '').toLowerCase()}">${getTranslatedStatus(item.Status)}</span>
-                    </div>`;
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem;">
+                    <div style="flex: 1;">
+                        <p style="font-weight: 700; color: var(--primary-text); margin-bottom: 0.25rem;">${category}</p>
+                        <p style="font-size: 0.9rem; color: var(--secondary-text); margin-bottom: 0.5rem; line-height: 1.4;">"${message}"</p>
+                        ${reply ? `
+                            <div style="margin-top: 12px; padding: 10px; background-color: var(--primary-bg); border-radius: 8px; border-left: 3px solid var(--primary-color);">
+                                <span style="font-size: 0.8rem; font-weight: 700; color: var(--primary-color);">${lang === 'km' ? 'តបពីសាលា៖' : 'Admin Reply:'}</span>
+                                <p style="font-size: 0.85rem; margin-top: 4px; color: var(--primary-text);">${reply}</p>
+                            </div>
+                        ` : ''}
+                    </div>
+                    <span class="status-badge ${statusClass}">${getTranslatedStatus(status)}</span>
+                </div>`;
                 return div;
-            }, '<div class="card"><p>You have not submitted any feedback yet.</p></div>');
+            }, `<div class="card"><p>${txtNoFeedback}</p></div>`);
 
         } catch (error) {
-            container.innerHTML = `<div class="card"><p>Could not load feedback history.</p></div>`;
-            console.error("Error fetching feedback history:", error);
+            container.innerHTML = `<div class="card"><p>${lang === 'km' ? 'មិនអាចទាញយកប្រវត្តិមតិយោបល់បានទេ។' : 'Could not load feedback history.'}</p></div>`;
+            console.error("Error:", error);
         }
     }
 

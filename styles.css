@@ -3849,6 +3849,12 @@ input:checked+.slider:before {
     border-radius: 1rem;
     overflow: hidden;
     margin-bottom: .8rem;
+    padding: 0 !important;
+}
+
+.back-button {
+    color: hsl(var(--theme-hue), 80%, 60%) !important;
+    transition: color 0.3s ease; /* ធ្វើឲ្យការដូរពណ៌មានភាពរលូន */
 }
 
 .swipe-action-delete {
